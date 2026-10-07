@@ -1,0 +1,21 @@
+.DS_Store
+.AppleDouble
+.venv
+.idea
+.LSOverride
+*.pdf
+._*               # AppleDouble files
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+*/.DS_Store
+*.icloud
+!*/
+!*.pdf
+!*.docx
+!*.jpg
+!*.png
+!*.pages
+!*.py
+!*.cpp
+!*.gitignore
