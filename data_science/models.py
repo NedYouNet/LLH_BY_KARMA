@@ -16,6 +16,7 @@ class Candidate(BaseModel):
     experience_years: float
 
     test_result: float
+    is_grade_confirmed: bool = False  # <-- ДОБАВИТЬ
 
     fsp_id: Optional[str] = None
     fsp_achievements: int = 0
@@ -38,5 +39,6 @@ class RankedCandidate(BaseModel):
     fsp_score: float
     profile_score: float
     skills_score: float
+    is_grade_confirmed: bool
 
     explanation: list[str]

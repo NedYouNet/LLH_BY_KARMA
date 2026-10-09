@@ -64,11 +64,21 @@ class CandidateMatcher:
                 + PROFILE_WEIGHT * profile_score
         )
 
+        if not row.get("is_grade_confirmed", False):
+            score = score * 0.5
+
         return round(score * 100, 2), test_score, fsp_score, profile_score, skills_score
 
     @staticmethod
     def build_explanation(row, fsp_score: float, skills_score: float) -> list[str]:
         explanation = []
+
+        # Честно пишем работодателю про грейд в самом начале объяснения
+        if row.get("is_grade_confirmed", False):
+            explanation.append("Заявленный грейд подтвержден тестом")
+        else:
+            explanation.append("Тест на заявленный грейд не пройден")
+
         explanation.append(f"Совпадение по стеку: {skills_score * 100:.0f}%")
         explanation.append(f"Результат теста: {row['test_result']:.1f}%")
 
@@ -107,6 +117,7 @@ class CandidateMatcher:
                     fsp_score=round(row["fsp_score"] * 100, 2),
                     profile_score=round(row["profile_score"] * 100, 2),
                     skills_score=round(row["skills_score"] * 100, 2),
+                    is_grade_confirmed=bool(row.get("is_grade_confirmed", False)),  # Прокидываем флаг для ответа
                     explanation=self.build_explanation(row, row["fsp_score"], row["skills_score"])
                 )
             )

@@ -3,9 +3,7 @@ import pandas as pd
 
 from faker import Faker
 
-
 fake = Faker("ru_RU")
-
 
 SPECIALIZATIONS = {
     "Backend": [
@@ -37,7 +35,6 @@ SPECIALIZATIONS = {
         "Terraform"
     ]
 }
-
 
 GRADES = [
     "Junior",
@@ -110,7 +107,7 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
     ]
 
     profile_completeness = (
-        sum(profile_fields) / len(profile_fields)
+            sum(profile_fields) / len(profile_fields)
     )
 
     # Результат теста
@@ -122,6 +119,9 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
 
     else:
         test_result = random.uniform(85, 100)
+
+    # Генерируем статус подтверждения грейда (80% шанс, что подтвержден)
+    is_grade_confirmed = random.random() > 0.2
 
     return {
         "id": candidate_id,
@@ -145,6 +145,8 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
             2
         ),
 
+        "is_grade_confirmed": is_grade_confirmed,
+
         "fsp_id": fsp_id,
 
         "fsp_achievements": fsp_achievements,
@@ -157,10 +159,9 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
 
 
 def generate_dataset(
-    count: int = 500,
-    output_path: str = "data_science/data/candidates.csv"
+        count: int = 500,
+        output_path: str = "data_science/data/candidates.csv"
 ) -> pd.DataFrame:
-
     if count < 2:
         raise ValueError(
             "Количество кандидатов должно быть >= 2"
@@ -172,7 +173,6 @@ def generate_dataset(
     fsp_count = count // 2
 
     for candidate_id in range(1, count + 1):
-
         has_fsp = candidate_id <= fsp_count
 
         candidate = generate_candidate(
@@ -196,7 +196,6 @@ def generate_dataset(
 
 
 if __name__ == "__main__":
-
     df = generate_dataset()
 
     print(
