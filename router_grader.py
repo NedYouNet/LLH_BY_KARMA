@@ -59,7 +59,6 @@ def submit_solution(submission: SubmissionRequest):
         tests_passed=tests_passed,
         total_tests=len(hidden_tests),
         complexity=complexity,
-        cv_grade=submission.candidate_cv_grade
     )
 
     return GraderResponse(

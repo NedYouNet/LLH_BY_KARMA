@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import routers  # Парсинг резюме (название вашего файла)
 import router_tasks  # Генерация задач
 import router_grader # Наш новый автогрейдер
-
+import router_matching
 app = FastAPI(title="FSP Hackathon ML API")
 
 app.add_middleware(
@@ -20,7 +20,7 @@ app.include_router(routers.router)
 app.include_router(router_tasks.router)
 # Подключаем грейдер
 app.include_router(router_grader.router)
-
+app.include_router(router_matching.router)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

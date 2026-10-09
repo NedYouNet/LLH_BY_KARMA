@@ -93,11 +93,4 @@ def calculate_candidate_score(tests_passed: int, total_tests: int, complexity: s
     elif "O(n^2)" in complexity:
         score += 10  # Даем минимум за неоптимальное решение
 
-    # 3. Релевантность бэкграунда из CV (вес 20 баллов)
-    cv_grade_upper = cv_grade.upper()
-    if "SENIOR" in cv_grade_upper or "MIDDLE" in cv_grade_upper:
-        score += 20
-    elif "JUNIOR" in cv_grade_upper:
-        score += 10
-
     return round(score, 1)
