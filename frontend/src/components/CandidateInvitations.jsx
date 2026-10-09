@@ -1,7 +1,66 @@
 import { useState } from 'react'
-import { invitations, invitationUiStatus, INVITATION_STATUS_LABELS, errorMessage } from '../api'
+import { candidates, invitations, invitationUiStatus, INVITATION_STATUS_LABELS, errorMessage } from '../api'
 import { buttonClass, secondaryClass, Field, ErrorNotice, ResourceState, useResource, money, date, Reasons } from './ui'
+function CandidateContacts({ candidateId }) {
+    const [card, setCard] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
 
+    async function load() {
+        setCard(null)
+        setError('')
+        setLoading(true)
+
+        try {
+            setCard(await candidates.get(candidateId))
+        } catch (failure) {
+            setError(errorMessage(failure))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fields = [
+        ['full_name', 'ФИО'],
+        ['email', 'Почта'],
+        ['phone', 'Телефон'],
+        ['telegram', 'Telegram'],
+    ]
+
+    return (
+        <div className="rounded-lg border border-gray-200 p-4">
+            <button
+                type="button"
+                className={secondaryClass}
+                disabled={loading}
+                onClick={load}
+            >
+                {loading ? 'Загрузка…' : 'Показать / обновить контакты'}
+            </button>
+
+            <ErrorNotice message={error} />
+
+            {card && (
+                card.contacts ? (
+                    <div className="mt-3 space-y-1">
+                        {fields.map(([key, label]) => (
+                            card.contacts[key] ? (
+                                <p key={key} className="break-all">
+                                    {label}: {card.contacts[key]}
+                                </p>
+                            ) : null
+                        ))}
+                    </div>
+                ) : (
+                    <p className="mt-3">
+                        {card.contacts_hidden_reason ||
+                            'Бэкенд не предоставил доступ к контактам.'}
+                    </p>
+                )
+            )}
+        </div>
+    )
+}
 export default function CandidateInvitations({ role = 'candidate' }) {
     const resource = useResource(invitations.list)
     const [opened, setOpened] = useState(null)
@@ -62,7 +121,18 @@ export default function CandidateInvitations({ role = 'candidate' }) {
                     {item.candidate_reply && <p>Ответ кандидата: {item.candidate_reply}</p>}
                     {pending && role === 'candidate' && <><Field label="Комментарий к ответу (необязательно)" multiline maxLength={2000} value={replies[item.id] || ''} disabled={Boolean(busy)} onChange={value => setReplies(current => ({ ...current, [item.id]: value }))} /><p className="text-sm text-gray-600">При принятии приглашения компания получит доступ к вашим контактам.</p><div className="flex gap-3"><button type="button" className={buttonClass} disabled={Boolean(busy)} onClick={() => answer(item.id, 'accepted')}>Принять</button><button type="button" className={secondaryClass} disabled={Boolean(busy)} onClick={() => answer(item.id, 'rejected')}>Отклонить</button></div></>}
                     {item.status === 'accepted' && role === 'candidate' && <label className="flex items-center gap-2"><input type="checkbox" checked={!item.contacts_revoked} disabled={Boolean(busy)} onChange={event => changeContactAccess(item, event.target.checked)} />Компания видит мои контакты</label>}
-                    {item.status === 'accepted' && role === 'employer' && <p>{item.contacts_revoked ? 'Кандидат закрыл доступ к контактам.' : 'Кандидат разрешил доступ к контактам.'}</p>}
+                    {item.status === 'accepted' && role === 'employer' && (
+                        <div className="space-y-3">
+                            <p>
+                                {item.contacts_revoked
+                                    ? 'Кандидат закрыл доступ к контактам.'
+                                    : 'Кандидат разрешил доступ к контактам.'}
+                            </p>
+                            {!item.contacts_revoked && (
+                                <CandidateContacts candidateId={item.candidate_id} />
+                            )}
+                        </div>
+                    )}
                     {pending && role === 'employer'  && <button type="button" className={secondaryClass} disabled={Boolean(busy)} onClick={() => answer(item.id)}>Отозвать приглашение</button>}
                     <button type="button" className="block text-purple-700 underline" onClick={() => setOpened(null)}>Свернуть</button>
                 </div>}
