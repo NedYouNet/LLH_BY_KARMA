@@ -45,53 +45,74 @@ def plan_levels(target_level: int, total: int) -> list[int]:
 
 def build_items(spec: str, target_grade: str, seed: int, total: int = 10,
                 prefer_skills: list[str] | None = None) -> list[dict]:
-    """Собирает задания для попытки. Возвращает список заданий С ответами (хранится только на сервере)."""
+    """Собирает ТОЛЬКО НОВЫЕ задания для попытки. Возвращает список заданий С ответами."""
     rng = random.Random(seed)
     target_level = GRADE_LEVEL[target_grade]
     pool = templates_for(spec)
-    if not pool:
-        raise ValueError(f"Нет заданий для специализации {spec}")
+    
+    # ФИЛЬТРАЦИЯ: Оставляем только наши новые задания (префикс "be.code.")
+    # Старые шаблоны полностью исключаются из выдачи
+    new_pool = [t for t in pool if t.id.startswith("be.code.")]
+    
+    if not new_pool:
+        raise ValueError(f"Критическая ошибка: В новом банке нет заданий для специализации {spec}")
+
     prefer = {s.lower() for s in (prefer_skills or [])}
     chosen: list[Template] = []
-    code_taken = False
-
+    
+    # Теперь мы разрешаем брать несколько заданий с кодом,
+    # так как все наши новые задания имеют тип "code"
     uses: dict[str, int] = {}
-    for lvl in plan_levels(target_level, total):
-        # Порядок выбора (важно для СОПОСТАВИМОЙ сложности):
-        #  1) неиспользованный шаблон РОВНО этого уровня;
-        #  2) повтор ПАРАМЕТРИЗОВАННОГО шаблона этого уровня (другие числа -> другой вопрос), не более 2 раз;
-        #  3) только если банк уровня пуст — ближайший уровень (это сигнал, что банк надо пополнить).
-        def ok(t: Template) -> bool:
-            return not (t.kind == "code" and code_taken)
-        candidates = [t for t in pool if t.level == lvl and t.id not in uses and ok(t)]
+    
+    # Получаем план уровней (например, для Middle это будет [1,1,1, 2,2,2,2,2, 3,3])
+    planned_levels = plan_levels(target_level, total)
+    
+    for lvl in planned_levels:
+        # 1) Ищем неиспользованный шаблон нужного уровня
+        candidates = [t for t in new_pool if t.level == lvl and t.id not in uses]
+        
+        # 2) Если все уникальные шаблоны этого уровня уже взяты, 
+        #    разрешаем повторно взять параметризованный шаблон (но не более 2 раз)
         if not candidates:
-            candidates = [t for t in pool if t.level == lvl and t.parametric and t.kind != "code"
-                          and uses.get(t.id, 0) < 2]
+             candidates = [t for t in new_pool if t.level == lvl and uses.get(t.id, 0) < 2]
+             
+        # 3) Запрещаем брать задания из соседних уровней (резервный выбор),
+        #    чтобы не нарушать распределение сложности теста.
+        #    Если заданий на уровень не хватает, лучше выбросить ошибку, 
+        #    чем незаметно подсовывать другие уровни или старые задания.
+        
         if not candidates:
-            for distance in range(1, MAX_LEVEL + 1):
-                candidates = [t for t in pool if t.id not in uses and abs(t.level - lvl) == distance and ok(t)]
-                if candidates:
-                    break
-        if not candidates:
-            break  # банк исчерпан — тест будет короче (лучше, чем повторять вопросы)
+             raise ValueError(
+                 f"Нехватка новых заданий в банке для уровня {lvl} (специализация {spec}). "
+                 f"Пожалуйста, добавьте больше уникальных заданий уровня {lvl} в bank.py."
+             )
+             
         weights = [3.0 if t.skill.lower() in prefer else 1.0 for t in candidates]
         t = rng.choices(candidates, weights=weights, k=1)[0]
         uses[t.id] = uses.get(t.id, 0) + 1
-        code_taken = code_taken or t.kind == "code"
         chosen.append(t)
 
     items = []
     texts: set[str] = set()
     for n, t in enumerate(sorted(chosen, key=lambda x: (x.level, x.kind == "code")), 1):
-        for _ in range(8):  # при повторе шаблона следим, чтобы формулировки не совпали
+        for _ in range(8):  
             variant = t.make(random.Random(rng.getrandbits(32)))
             if variant["text"] not in texts:
                 break
         texts.add(variant["text"])
+        
+        # Строго соблюдаем структуру, которую ожидает фронтенд и автогрейдер
         items.append({
-            "id": f"q{n}", "template_id": t.id, "level": t.level, "skill": t.skill, "kind": t.kind,
-            "weight": item_weight(t.level), "text": variant["text"], "options": variant.get("options"),
-            "answer": variant.get("answer"), "code": variant.get("code"),
+            "id": f"q{n}", 
+            "template_id": t.id, 
+            "level": t.level, 
+            "skill": t.skill, 
+            "kind": t.kind,
+            "weight": item_weight(t.level), 
+            "text": variant["text"], 
+            "options": variant.get("options"),
+            "answer": variant.get("answer"), 
+            "code": variant.get("code"),
         })
     return items
 
