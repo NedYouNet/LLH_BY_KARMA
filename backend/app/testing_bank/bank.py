@@ -425,3 +425,103 @@ _static("ops.deploy.bluegreen", "devops", 3, "Kubernetes", "Главная ос�
 
 _static("ops.sre.slo", "devops", 3, "Prometheus", "SLO 99.9% за 30 дней — это примерно сколько допустимого простоя?",
         "≈ 43 минуты", ["≈ 4 часа", "≈ 7 часов", "≈ 4 минуты"])
+"""Банк заданий для ML-интеграции (Вариант A)"""
+
+@_add("be.code.sequence_lookup", "backend", 1, "Алгоритмы", "code")
+def _(rng):
+    # Динамическая генерация данных
+    target = rng.randint(10, 50)
+    arr = sorted([rng.randint(0, 100) for _ in range(7)] + [target])
+    
+    # Скрытые тесты уникальны для каждого кандидата
+    tests = [
+        {"args": [arr, target], "expected": arr.index(target)},
+        {"args": [[1, 2, 3, 4], 99], "expected": -1}, # Краевой случай
+        {"args": [[target], target], "expected": 0}   # Массив из 1 элемента
+    ]
+    
+    legends = [
+        "Найдите индекс зараженного сектора в логах сервера. Реализуйте функцию поиска за O(log n).",
+        "Определите позицию посылки на складе логистической компании. Алгоритм должен работать за O(log n)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(nums: list[int], target: int) -> int:",
+            "examples": [{"args": [[10, 20, 30, 40], 30], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+@_add("be.code.continuous_stream", "backend", 2, "Алгоритмы", "code")
+def _(rng):
+    # Динамическая генерация
+    k = rng.randint(2, 4)
+    # Генерируем массив случайных чисел (включая отрицательные для усложнения)
+    arr = [rng.randint(-10, 20) for _ in range(8)]
+    
+    # Вычисляем правильный ответ для сгенерированного массива
+    max_sum = float('-inf')
+    for i in range(len(arr) - k + 1):
+        max_sum = max(max_sum, sum(arr[i:i+k]))
+        
+    tests = [
+        {"args": [arr, k], "expected": max_sum},
+        {"args": [[-5, -1, -9, -2], 2], "expected": -3} # Краевой случай (все отрицательные)
+    ]
+    
+    legends = [
+        f"Анализ пиковой нагрузки DDoS-атаки. Найдите максимальную сумму подмассива фиксированного размера K={k} за O(n).",
+        f"Анализ непрерывного потока биржевых метрик. Найдите отрезок длины {k} с максимальной доходностью (сложность O(n))."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int], k: int) -> int:",
+            "examples": [{"args": [[1, 4, 2, 10, 2], 3], "expected": 16}],
+            "tests": tests
+        }
+    }
+
+@_add("be.code.network_routing", "backend", 3, "Алгоритмы", "code")
+def _(rng):
+    # Динамическая генерация узлов и стартовой/конечной точки
+    start_node = rng.randint(0, 1)
+    target_node = rng.randint(4, 5)
+    
+    # Генерируем связи так, чтобы путь точно существовал (например, 0->2->4)
+    edges = [[start_node, 2], [2, 3], [3, target_node], [start_node, 1], [1, target_node]]
+    
+    # Перемешиваем ребра, чтобы они не шли по порядку
+    rng.shuffle(edges)
+    
+    tests = [
+        # Успешный путь
+        {"args": [6, edges, start_node, target_node], "expected": 2}, # Оптимальный путь: start -> 1 -> target (2 шага)
+        # Пути нет
+        {"args": [4, [[0, 1], [2, 3]], 0, 3], "expected": -1},
+        # Старт равен финишу
+        {"args": [3, [[0, 1], [1, 2]], 1, 1], "expected": 0}
+    ]
+    
+    legends = [
+        "Спроектируйте оптимальную маршрутизацию в сети дата-центров. Найдите минимальное количество переходов от стартового узла до конечного. Ограничение O(V + E).",
+        "Поиск кратчайшего пути обхода файрволов во внутренней корпоративной сети. Избегайте зацикливаний. Сложность O(V + E)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(n: int, edges: list[list[int]], start: int, target: int) -> int:",
+            "examples": [{"args": [5, [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]], 0, 4], "expected": 2}],
+            "tests": tests
+        }
+    }
