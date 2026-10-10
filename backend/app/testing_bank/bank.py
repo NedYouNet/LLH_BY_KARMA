@@ -425,3 +425,94 @@ _static("ops.deploy.bluegreen", "devops", 3, "Kubernetes", "Главная ос�
 
 _static("ops.sre.slo", "devops", 3, "Prometheus", "SLO 99.9% за 30 дней — это примерно сколько допустимого простоя?",
         "≈ 43 минуты", ["≈ 4 часа", "≈ 7 часов", "≈ 4 минуты"])
+
+
+@_add("be.code.sequence_lookup", "backend", 1, "Алгоритмы", "code")
+def _(rng):
+    target = rng.randint(10, 50)
+    # ИСПРАВЛЕНИЕ: Используем sample, чтобы гарантировать уникальность чисел массива.
+    # Иначе бинарный поиск мог найти другой индекс дубликата, и тест бы упал.
+    base_arr = rng.sample(range(100), 7)
+    if target in base_arr:
+        base_arr.remove(target)
+    arr = sorted(base_arr + [target])
+    
+    tests = [
+        {"args": [arr, target], "expected": arr.index(target)},
+        {"args": [[1, 2, 3, 4], 99], "expected": -1}, 
+        {"args": [[target], target], "expected": 0}   
+    ]
+    
+    legends = [
+        "Найдите индекс зараженного сектора в логах сервера. Реализуйте функцию поиска за O(log n).",
+        "Определите позицию посылки на складе логистической компании. Алгоритм должен работать за O(log n)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(nums: list[int], target: int) -> int:",
+            "examples": [{"args": [[10, 20, 30, 40], 30], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+@_add("be.code.continuous_stream", "backend", 2, "Алгоритмы", "code")
+def _(rng):
+    k = rng.randint(2, 4)
+    arr = [rng.randint(-10, 20) for _ in range(8)]
+    
+    max_sum = float('-inf')
+    for i in range(len(arr) - k + 1):
+        max_sum = max(max_sum, sum(arr[i:i+k]))
+        
+    tests = [
+        {"args": [arr, k], "expected": max_sum},
+        {"args": [[-5, -1, -9, -2], 2], "expected": -6} 
+    ]
+    
+    legends = [
+        f"Анализ пиковой нагрузки DDoS-атаки. Найдите максимальную сумму подмассива фиксированного размера K={k} за O(n).",
+        f"Анализ непрерывного потока биржевых метрик. Найдите отрезок длины {k} с максимальной доходностью (сложность O(n))."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int], k: int) -> int:",
+            "examples": [{"args": [[1, 4, 2, 10, 2], 3], "expected": 16}],
+            "tests": tests
+        }
+    }
+
+@_add("be.code.network_routing", "backend", 3, "Алгоритмы", "code")
+def _(rng):
+    
+    edges = [[0, 2], [2, 4], [0, 1], [1, 3], [3, 4], [1, 5]]
+    rng.shuffle(edges)
+    
+    tests = [
+        {"args": [6, edges, 0, 4], "expected": 2}, 
+        {"args": [4, [[0, 1], [2, 3]], 0, 3], "expected": -1}, # Пути нет
+        {"args": [3, [[0, 1], [1, 2]], 1, 1], "expected": 0}   # Старт равен финишу
+    ]
+    
+    legends = [
+        "Спроектируйте оптимальную маршрутизацию в сети дата-центров. Найдите минимальное количество переходов от стартового узла 0 до конечного 4. Ограничение O(V + E).",
+        "Поиск кратчайшего пути обхода файрволов во внутренней корпоративной сети от узла 0 к 4. Избегайте зацикливаний. Сложность O(V + E)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(n: int, edges: list[list[int]], start: int, target: int) -> int:",
+            "examples": [{"args": [5, [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]], 0, 4], "expected": 2}],
+            "tests": tests
+        }
+    }
