@@ -1,7 +1,7 @@
 from gigachat import GigaChat
 
 # Твой правильный ключ
-token = "MDFhMTFkMTQtMzFiMi03MDQ4LWFkMGEtYzFhNzUwNzk5YTMxOjIyZGQ0NmU0LTVjY2ItNGEyOC05ZTNmLTk3M2Q0MGNiZGI2YQ=="
+token = ""
 
 print("Отправляем запрос в Сбер...")
 
