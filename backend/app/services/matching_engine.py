@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.ml import matching as ml_matching
-from app.reference import GRADE_LEVEL, GRADE_NAME, category_label
+from app.reference import GRADE_LEVEL, GRADE_NAME, category_label, fmt_score
 
 
 @dataclass
@@ -162,7 +162,7 @@ def score_candidate(c, crit: SearchCriteria, tfidf: TfIdf | None = None, query_v
     cat = category_label(spec, grade)
     if verified:
         reasons.append({"type": "test", "positive": (c.test_score or 0) >= 70,
-                        "label": f"{cat}: тест {round(c.test_score or 0)}/100"})
+                        "label": f"{cat}: тест {fmt_score(c.test_score or 0)}/100"})
     else:
         reasons.append({"type": "test", "positive": False,
                         "label": f"{cat}: грейд заявлен кандидатом, тест ещё не пройден"})

@@ -27,7 +27,7 @@ from app.models import (
     Vacancy,
 )
 from app.models import TestAttempt
-from app.reference import GRADE_CODES, GRADE_LEVEL, SKILLS, SOFT_SKILLS, TEAM_ROLES, category_label
+from app.reference import GRADE_CODES, GRADE_LEVEL, SKILLS, SOFT_SKILLS, TEAM_ROLES, category_label, fmt_score
 from app.schemas.testing import GradeDecision
 from app.services import testing_engine
 from app.services.fsp_service import MockFspRegistry, compute_fsp_score
@@ -301,7 +301,7 @@ def make_candidate(db, pw_hash: str, idx: int, with_fsp: bool, email: str | None
         attempt, result = make_attempt(db, c, spec, grade, target, assigned)
         c.test_score, c.skill_scores = attempt.score, result["by_skill"]
         db.add(GradeHistory(candidate_id=c.id, specialization=spec, old_grade=None, new_grade=grade,
-                            attempt_id=attempt.id, reason=f"Тест {attempt.score:.0f}/100", changed_at=assigned))
+                            attempt_id=attempt.id, reason=f"Тест {fmt_score(attempt.score)}/100", changed_at=assigned))
     return c
 
 
@@ -370,7 +370,7 @@ def _main(do_reset: bool) -> None:
                       position_title=demo_v.title, message="Алексей, видели ваш результат теста и призовые места ФСП. "
                       "Хотим пригласить на интервью в платёжную команду.", salary_from=240000, salary_to=300000,
                       contact_method="Telegram @hr_digital", status="sent", match_score=86.5,
-                      match_reasons=[{"type": "test", "label": f"Бэкенд · Middle: тест {demo.test_score:.0f}/100",
+                      match_reasons=[{"type": "test", "label": f"Бэкенд · Middle: тест {fmt_score(demo.test_score)}/100",
                                      "positive": True}]))
     emp_by_id = {e.id: e for e in employers}
     for c in rng.sample(candidates[1:], 25):

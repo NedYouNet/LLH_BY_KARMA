@@ -21,7 +21,7 @@ from app.core.config import settings
 from app.core.database import utcnow
 from app.core.errors import BadRequest, Conflict, NotFound
 from app.models import CandidateProfile, GradeHistory, TestAttempt, Vacancy
-from app.reference import GRADE_CODES, GRADE_LEVEL, GRADE_NAME, category_label
+from app.reference import GRADE_CODES, GRADE_LEVEL, GRADE_NAME, category_label, fmt_score
 from app.repositories.repos import AttemptRepository, CandidateRepository
 from app.schemas.candidate import CategoryStatus, GradeHistoryOut, GradeTarget
 from app.schemas.testing import AttemptOut, AttemptResultOut, AttemptSummary, GradeDecision
@@ -171,7 +171,7 @@ class TestingService:
         c.skill_scores = by_skill
         if changed:
             self.db.add(GradeHistory(candidate_id=c.id, specialization=spec, old_grade=before, new_grade=target,
-                                     attempt_id=a.id, reason=f"Тест {score:.0f}/100"))
+                                     attempt_id=a.id, reason=f"Тест {fmt_score(score)}/100"))
             if before is None:
                 c.grade_assigned_at = now
             c.grade_changed_at = now

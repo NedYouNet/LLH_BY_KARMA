@@ -17,7 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.models import CandidateProfile
-from app.reference import GRADE_NAME, SPEC_NAME, WORK_FORMATS, category_label
+from app.reference import GRADE_NAME, SPEC_NAME, WORK_FORMATS, category_label, fmt_score
 
 WORK_FORMAT_NAME = {w["code"]: w["name"] for w in WORK_FORMATS}
 
@@ -61,7 +61,7 @@ def build_profile_pdf(c: CandidateProfile, email: str) -> bytes:
         row("Грейд", f"{GRADE_NAME.get(c.grade, c.grade)} (подтверждён тестом)" if c.grade_verified else
             (f"{GRADE_NAME.get(c.declared_grade, c.declared_grade)} (заявлен, не подтверждён)"
              if c.declared_grade else None)),
-        row("Балл теста", f"{c.test_score:.0f}/100" if c.test_score is not None else None),
+        row("Балл теста", f"{fmt_score(c.test_score)}/100" if c.test_score is not None else None),
         row("Опыт", f"{c.experience_years:g} лет"),
         row("Город", c.city), row("Формат работы", WORK_FORMAT_NAME.get(c.work_format or "", c.work_format)),
         row("Email", c.contact_email or email), row("Телефон", c.phone), row("Telegram", c.telegram),

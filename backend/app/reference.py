@@ -105,3 +105,10 @@ def normalize_skill(raw: str) -> str | None:
         if s.lower() == raw.lower():
             return s
     return raw[:40]
+
+
+def fmt_score(score: float | None) -> str:
+    """Балл теста для подписей: как хранится, без округления до целого (89.7 -> «89.7», 100.0 -> «100»)."""
+    if score is None:
+        return "—"
+    return f"{score:.1f}".rstrip("0").rstrip(".")

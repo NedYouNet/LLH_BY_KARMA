@@ -61,6 +61,19 @@ def test_fail_lower_retake_allowed_same_grade_blocked(client, db):
     assert pass_test(client, db, h, grade="junior")["passed"]
 
 
+
+def test_score_shown_without_rounding(client, db):
+    """Балл в истории грейда совпадает с баллом профиля один в один (без округления до целого)."""
+    from app.reference import fmt_score
+    assert fmt_score(89.7) == "89.7" and fmt_score(100.0) == "100" and fmt_score(None) == "—"
+    h = register(client, "exact@test.ru")
+    client.post("/api/candidate/survey", json=SURVEY, headers=h)
+    res = pass_test(client, db, h, grade="junior", target_score=75)
+    st = client.get("/api/candidate/category", headers=h).json()
+    assert st["test_score"] == res["score"]
+    assert st["history"][-1]["reason"] == f"Тест {fmt_score(res['score'])}/100"
+
+
 def test_grade_not_lowered_and_cooldown(client, db):
     h = register(client, "cd@test.ru")
     client.post("/api/candidate/survey", json=SURVEY, headers=h)
