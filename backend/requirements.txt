@@ -15,3 +15,4 @@ reportlab==4.4.1           # генерация PDF-профиля
 openpyxl==3.1.5            # таблица с реальными результатами ФСП (data/fsp_results.xlsx)
 Faker==37.3.0              # синтетические данные для scripts/seed.py
 cryptography==45.0.5       # AES-256-GCM шифрование персональных данных в БД
+gigachat==0.2.3
