@@ -1,1 +1,72 @@
 @import "tailwindcss";
+
+/* FSP BRAND START */
+@theme {
+  --color-purple-50: #F3F1FF;
+  --color-purple-100: #E6E2FF;
+  --color-purple-200: #CCC5FF;
+  --color-purple-300: #ADA2FF;
+  --color-purple-400: #8170FF;
+  --color-purple-500: #402FFF;
+  --color-purple-600: #402FFF;
+  --color-purple-700: #3020CC;
+  --color-purple-800: #0A006B;
+  --color-purple-900: #0A006B;
+  --color-purple-950: #08004D;
+  --color-gray-50: #F7F7F7;
+  --color-gray-100: #EDEDED;
+  --color-gray-200: #D9D9D9;
+  --color-gray-300: #C8C9CA;
+  --color-gray-400: #9B9C9E;
+  --color-gray-500: #686A74;
+  --color-gray-600: #3A3C46;
+  --color-gray-700: #2D2E37;
+  --color-gray-800: #1B1C21;
+  --color-gray-900: #1B1C21;
+  --color-red-500: #EC1D35;
+  --color-red-600: #C9162C;
+}
+@layer base {
+  body { color: #1B1C21; background-color: #EDEDED; }
+  button, a, input, select, textarea { accent-color: #402FFF; }
+  :focus-visible { outline: 2px solid #402FFF; outline-offset: 3px; }
+}
+/* FSP BRAND END */
+
+/* FSP THEME START */
+html { color-scheme: light; }
+.fsp-logo-dark { display: none; }
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] body { background: #1B1C21; color: #EDEDED; }
+html[data-theme="dark"] .fsp-logo-light { display: none; }
+html[data-theme="dark"] .fsp-logo-dark { display: block; }
+html[data-theme="dark"] .bg-white { background-color: #2D2E37; }
+html[data-theme="dark"] .bg-gray-100 { background-color: #1B1C21; }
+html[data-theme="dark"] .bg-gray-50 { background-color: #25262E; }
+html[data-theme="dark"] :is(.border-gray-200, .border-gray-300) { border-color: #545663; }
+html[data-theme="dark"] .text-gray-800 { color: #EDEDED; }
+html[data-theme="dark"] .text-gray-600 { color: #D9D9D9; }
+html[data-theme="dark"] .text-gray-500 { color: #B5B6BF; }
+html[data-theme="dark"] .bg-purple-50 { background-color: #282344; }
+html[data-theme="dark"] .bg-purple-100 { background-color: #332B55; }
+html[data-theme="dark"] .bg-purple-200 { background-color: #453968; }
+html[data-theme="dark"] :is(.text-purple-700, .text-purple-800) { color: #C8BFFF; }
+html[data-theme="dark"] :is(.text-purple-500, .text-purple-600) { color: #ADA2FF; }
+html[data-theme="dark"] .bg-red-50 { background-color: #40232B; }
+html[data-theme="dark"] :is(.text-red-700, .text-red-800) { color: #FFB6BF; }
+html[data-theme="dark"] .border-red-200 { border-color: #96535E; }
+html[data-theme="dark"] .bg-green-50 { background-color: #1D3930; }
+html[data-theme="dark"] :is(.text-green-700, .text-green-800) { color: #A6E5C0; }
+html[data-theme="dark"] .bg-amber-50 { background-color: #3F3321; }
+html[data-theme="dark"] .text-amber-900 { color: #FFE0A6; }
+html[data-theme="dark"] .border-amber-300 { border-color: #9B7E45; }
+html[data-theme="dark"] :is(input, textarea, select) { color: #EDEDED; }
+html[data-theme="dark"] :is(input, textarea)::placeholder { color: #B5B6BF; }
+html[data-theme="dark"] :is(input, textarea, select):not([class*="bg-"]) { background-color: #25262E; }
+html[data-theme="dark"] option { color: #EDEDED; background-color: #25262E; }
+@media (hover: hover) {
+  html[data-theme="dark"] .hover\:bg-purple-100:hover { background-color: #453968; }
+  html[data-theme="dark"] .hover\:bg-purple-200:hover { background-color: #453968; }
+  html[data-theme="dark"] .hover\:bg-gray-50:hover { background-color: #3A3C46; }
+}
+/* FSP THEME END */

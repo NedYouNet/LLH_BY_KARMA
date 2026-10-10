@@ -81,7 +81,7 @@ export default function ShortTaskBoard({ role }) {
                 <form className="space-y-2" onSubmit={e => {
                     e.preventDefault()
                     review(s)
-                }}><Field label="Оценка от 0 до 10" type="number" required min={0} max={10} step={0.1} value={values.score} onChange={v => setReviews(x => ({ ...x, [s.id]: { ...values, score: v } }))} /><Field label="Комментарий" multiline maxLength={2000} value={values.feedback} onChange={v => setReviews(x => ({ ...x, [s.id]: { ...values, feedback: v } }))} /><button className={buttonClass} disabled={busy}>ССохранить оценку</button></form>
+                }}><Field label="Оценка от 0 до 10" type="number" required min={0} max={10} step={0.1} value={values.score} onChange={v => setReviews(x => ({ ...x, [s.id]: { ...values, score: v } }))} /><Field label="Комментарий" multiline maxLength={2000} value={values.feedback} onChange={v => setReviews(x => ({ ...x, [s.id]: { ...values, feedback: v } }))} /><button className={buttonClass} disabled={busy}>Сохранить оценку</button></form>
             )}</article> })}</section>}
     </section>
 }

@@ -1,3 +1,4 @@
+import ThemeToggle from './components/ThemeToggle'
 import { useEffect, useState } from 'react'
 import { auth, fspId, errorMessage, isLoggedIn } from './api'
 import RoleSelector from './components/RoleSelector'
@@ -135,7 +136,12 @@ export default function App() {
 
     return <main className="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-center justify-center">
         <section className="w-full max-w-5xl rounded-2xl bg-white p-4 sm:p-8 shadow-md">
-            <h1 className="text-3xl font-bold text-purple-600">Карьерная платформа ФСП</h1>
+            <header className="flex flex-wrap items-center gap-4 border-b border-gray-200 pb-5">
+                <img src="/fsp-logo.svg" alt="Федерация спортивного программирования" className="fsp-logo-light h-12 w-auto max-w-full object-contain sm:h-14" />
+                <img src="/fsp-logo-dark.svg" alt="Федерация спортивного программирования" className="fsp-logo-dark h-12 w-auto max-w-full object-contain sm:h-14" />
+                <h1 className="text-2xl font-bold text-gray-800 sm:text-3xl">Карьерная платформа ФСП</h1>
+                <ThemeToggle />
+            </header>
             {checking ? <p className="mt-6" role="status">Проверяем сессию…</p> : <>
                 {notice && <p role="status" className="mt-4 rounded-lg bg-purple-50 p-3">{notice}</p>}
                 {sessionError && <div role="alert" className="mt-4 space-y-3 rounded-lg bg-red-50 p-3">

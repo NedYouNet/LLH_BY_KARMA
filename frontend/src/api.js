@@ -43,8 +43,37 @@ export class ApiError extends Error {
             }
         }
 
+        const fieldLabels = {
+            email: 'Электронная почта',
+            password: 'Пароль',
+            full_name: 'Имя',
+            company_name: 'Название компании',
+            form: 'Форма',
+        }
+
+        const translateError = (field, raw) => {
+            const text = String(raw)
+            const name = field.split('.').pop()
+
+            if (name === 'email' && /valid email|email address/i.test(text)) {
+                return 'Введите корректный адрес, например name@example.ru'
+            }
+            if (name === 'password' && /должен содержать буквы и цифры/i.test(text)) {
+                return 'Используйте буквы и цифры'
+            }
+            return text.replace(/^Value error,\s*/i, '')
+        }
+
         const fieldMessage = Object.entries(fields)
-            .map(([field, message]) => `${field}: ${Array.isArray(message) ? message.join('; ') : message}`)
+            .map(([field, message]) => {
+                const messages = Array.isArray(message) ? message : [message]
+                const label = fieldLabels[field.split('.').pop()] || 'Поле'
+                const text = messages
+                    .map(item => translateError(field, item))
+                    .join('; ')
+
+                return `${label}: ${text}`
+            })
             .join('\n')
         const message = payload.message
             || (typeof detail === 'string' ? detail : '')
@@ -374,6 +403,7 @@ export const candidate = {
 }
 
 export const testing = {
+    check: (attemptId, itemId, code) => request('POST', `/testing/attempts/${attemptId}/check`, { body: { item_id: itemId, code } }),
     /** Начать тест. Ошибки 409: SURVEY_REQUIRED, ATTEMPT_IN_PROGRESS (data.attempt_id), GRADE_COOLDOWN, RETRY_COOLDOWN */
     start: (specialization, targetGrade) =>
         request('POST', '/testing/attempts', { body: { specialization, target_grade: targetGrade } }),

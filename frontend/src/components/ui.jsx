@@ -36,7 +36,16 @@ export function Field({ label, value, onChange, type = 'text', multiline = false
     return <label className="block"><span>{label}</span>{multiline ? <textarea rows={4} value={value ?? ''} onChange={event => onChange(event.target.value)} className={inputClass} {...props} /> : <input type={type} value={value ?? ''} onChange={event => onChange(event.target.value)} className={inputClass} {...props} />}</label>
 }
 export function Reasons({ reasons = [], breakdown }) {
-    const labels = { test: 'Тест', skills: 'Навыки', fsp: 'ФСП', experience: 'Опыт', activity: 'Активность', text: 'Описание', strengths: 'Сильные стороны' }
+    const labels = {
+        test: 'Тест',
+        skills: 'Навыки',
+        fsp: 'ФСП',
+        experience: 'Опыт',
+        activity: 'Активность',
+        text: 'Описание',
+        strengths: 'Сильные стороны',
+        grade_multiplier: 'Коэффициент грейда',
+    }
     return <div className="mt-3 space-y-2">
         {reasons.map((reason, index) => <p key={index} className={`rounded-lg p-2 text-sm ${reason.positive ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-900'}`}>{reason.label}{reason.missing?.length ? ` · Не хватает: ${reason.missing.join(', ')}` : ''}</p>)}
         {breakdown && <details><summary className="cursor-pointer text-sm text-purple-700">Вклад в оценку соответствия</summary>{Object.entries(breakdown).map(([key, raw]) => {
