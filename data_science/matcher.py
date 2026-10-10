@@ -47,7 +47,8 @@ class CandidateMatcher:
         # Возвращаем процент совпадения (от 0.0 до 1.0)
         return len(intersection) / len(req_set)
 
-    def calculate_score(self, row, vacancy: Vacancy) -> tuple[float, float, float, float]:
+    # Исправлена аннотация (теперь 5 элементов) и приведение всех баллов к шкале 0-100
+    def calculate_score(self, row, vacancy: Vacancy) -> tuple[float, float, float, float, float]:
         test_score = row["test_result"] / 100
         fsp_score = self.calculate_fsp_score(row)
         profile_score = float(row["profile_completeness"])
@@ -67,7 +68,13 @@ class CandidateMatcher:
         if not row.get("is_grade_confirmed", False):
             score = score * 0.5
 
-        return round(score * 100, 2), test_score, fsp_score, profile_score, skills_score
+        return (
+            round(score * 100, 2),
+            round(test_score * 100, 2),
+            round(fsp_score * 100, 2),
+            round(profile_score * 100, 2),
+            round(skills_score * 100, 2)
+        )
 
     @staticmethod
     def build_explanation(row, fsp_score: float, skills_score: float) -> list[str]:
@@ -79,7 +86,8 @@ class CandidateMatcher:
         else:
             explanation.append("Тест на заявленный грейд не пройден")
 
-        explanation.append(f"Совпадение по стеку: {skills_score * 100:.0f}%")
+        # Значение skills_score теперь передается уже в шкале 0-100, поэтому умножать на 100 не нужно
+        explanation.append(f"Совпадение по стеку: {skills_score:.0f}%")
         explanation.append(f"Результат теста: {row['test_result']:.1f}%")
 
         if pd.notna(row["fsp_id"]):
@@ -105,7 +113,11 @@ class CandidateMatcher:
         filtered[["score", "test_score", "fsp_score", "profile_score", "skills_score"]] = pd.DataFrame(
             scores_data.tolist(), index=filtered.index)
 
-        filtered = filtered.sort_values(by="score", ascending=False).head(limit)
+        # Жесткая сортировка: неподтвержденные грейды гарантированно отправляются в самый низ списка
+        filtered = filtered.sort_values(
+            by=["is_grade_confirmed", "score"],
+            ascending=[False, False]
+        ).head(limit)
 
         result = []
         for _, row in filtered.iterrows():
@@ -114,10 +126,10 @@ class CandidateMatcher:
                     candidate_id=int(row["id"]),
                     score=float(row["score"]),
                     test_score=float(row["test_score"]),
-                    fsp_score=round(row["fsp_score"] * 100, 2),
-                    profile_score=round(row["profile_score"] * 100, 2),
-                    skills_score=round(row["skills_score"] * 100, 2),
-                    is_grade_confirmed=bool(row.get("is_grade_confirmed", False)),  # Прокидываем флаг для ответа
+                    fsp_score=float(row["fsp_score"]),
+                    profile_score=float(row["profile_score"]),
+                    skills_score=float(row["skills_score"]),
+                    is_grade_confirmed=bool(row.get("is_grade_confirmed", False)),
                     explanation=self.build_explanation(row, row["fsp_score"], row["skills_score"])
                 )
             )

@@ -1,33 +1,38 @@
 import random
 import pandas as pd
+from pathlib import Path
 
 from faker import Faker
 
+# Фиксируем seed для воспроизводимости данных при валидации
+random.seed(42)
+Faker.seed(42)
 fake = Faker("ru_RU")
 
+# Нормализованные названия (snake_case), как ожидает бэкенд
 SPECIALIZATIONS = {
-    "Backend": [
+    "backend": [
         "Python",
         "C#",
         "Java",
         "Go",
         "C++"
     ],
-    "Frontend": [
+    "frontend": [
         "JavaScript",
         "TypeScript",
         "React",
         "Vue",
         "Angular"
     ],
-    "Data Science": [
+    "data_science": [
         "Python",
         "SQL",
         "Pandas",
         "NumPy",
         "scikit-learn"
     ],
-    "DevOps": [
+    "devops": [
         "Docker",
         "Kubernetes",
         "Linux",
@@ -36,10 +41,12 @@ SPECIALIZATIONS = {
     ]
 }
 
+# Добавлен грейд "intern" для синхронизации со справочником
 GRADES = [
-    "Junior",
-    "Middle",
-    "Senior"
+    "intern",
+    "junior",
+    "middle",
+    "senior"
 ]
 
 
@@ -68,23 +75,14 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
     grade = random.choice(GRADES)
 
     # Опыт зависит от грейда
-    if grade == "Junior":
-        experience = round(
-            random.uniform(0.5, 2.0),
-            1
-        )
-
-    elif grade == "Middle":
-        experience = round(
-            random.uniform(2.0, 5.0),
-            1
-        )
-
+    if grade == "intern":
+        experience = round(random.uniform(0.0, 0.5), 1)
+    elif grade == "junior":
+        experience = round(random.uniform(0.5, 2.0), 1)
+    elif grade == "middle":
+        experience = round(random.uniform(2.0, 5.0), 1)
     else:
-        experience = round(
-            random.uniform(5.0, 12.0),
-            1
-        )
+        experience = round(random.uniform(5.0, 12.0), 1)
 
     # FSP
     if has_fsp:
@@ -111,12 +109,12 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
     )
 
     # Результат теста
-    if grade == "Junior":
+    if grade == "intern":
+        test_result = random.uniform(30, 50)
+    elif grade == "junior":
         test_result = random.uniform(50, 75)
-
-    elif grade == "Middle":
+    elif grade == "middle":
         test_result = random.uniform(70, 90)
-
     else:
         test_result = random.uniform(85, 100)
 
@@ -125,36 +123,18 @@ def generate_candidate(candidate_id: int, has_fsp: bool) -> dict:
 
     return {
         "id": candidate_id,
-
         "name": fake.name(),
-
         "email": fake.email(),
-
         "phone": fake.phone_number(),
-
         "specialization": specialization,
-
         "grade": grade,
-
         "skills": ", ".join(skills),
-
         "experience_years": experience,
-
-        "test_result": round(
-            test_result,
-            2
-        ),
-
+        "test_result": round(test_result, 2),
         "is_grade_confirmed": is_grade_confirmed,
-
         "fsp_id": fsp_id,
-
         "fsp_achievements": fsp_achievements,
-
-        "profile_completeness": round(
-            profile_completeness,
-            2
-        )
+        "profile_completeness": round(profile_completeness, 2)
     }
 
 
@@ -185,6 +165,9 @@ def generate_dataset(
     # Создаём DataFrame
     df = pd.DataFrame(candidates)
 
+    # СОЗДАЕМ ДИРЕКТОРИЮ, если её нет (исправление ошибки падения при первом запуске)
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
     # Сохраняем CSV
     df.to_csv(
         output_path,
@@ -214,5 +197,4 @@ if __name__ == "__main__":
     )
 
     print()
-
     print(df.head())
