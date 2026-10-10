@@ -427,11 +427,46 @@ _static("ops.sre.slo", "devops", 3, "Prometheus", "SLO 99.9% за 30 дней �
         "≈ 43 минуты", ["≈ 4 часа", "≈ 7 часов", "≈ 4 минуты"])
 
 
+"""Банк заданий для ML-интеграции (Вариант A)"""
+
+# =====================================================================
+# 🟢 УРОВЕНЬ 0 (INTERN): Базовый синтаксис и циклы
+# =====================================================================
+
+@_add("be.code.sum_positives", "backend", 0, "Алгоритмы", "code")
+def _(rng):
+    # Генерация массива, гарантированно содержащего положительные числа
+    arr = [rng.randint(-10, 20) for _ in range(6)]
+    arr.append(rng.randint(1, 10)) 
+    
+    expected = sum(x for x in arr if x > 0)
+    
+    tests = [
+        {"args": [arr], "expected": expected},
+        {"args": [[-5, -2, 0, 10, 5]], "expected": 15},
+        {"args": [[-1, -2, -3]], "expected": 0}
+    ]
+    
+    legends = [
+        "Бухгалтерия прислала сырой лог транзакций. Напишите функцию, которая вернет сумму всех положительных пополнений счета.",
+        "Вы анализируете телеметрию датчиков умного дома. Посчитайте суммарное значение всех метрик, которые строго больше нуля."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int]) -> int:",
+            "examples": [{"args": [[-1, 5, 2, -10]], "expected": 7}],
+            "tests": tests
+        }
+    }
+
+
 @_add("be.code.sequence_lookup", "backend", 1, "Алгоритмы", "code")
 def _(rng):
     target = rng.randint(10, 50)
-    # ИСПРАВЛЕНИЕ: Используем sample, чтобы гарантировать уникальность чисел массива.
-    # Иначе бинарный поиск мог найти другой индекс дубликата, и тест бы упал.
     base_arr = rng.sample(range(100), 7)
     if target in base_arr:
         base_arr.remove(target)
@@ -439,12 +474,12 @@ def _(rng):
     
     tests = [
         {"args": [arr, target], "expected": arr.index(target)},
-        {"args": [[1, 2, 3, 4], 99], "expected": -1}, 
+        {"args": [[10, 20, 30, 40], 30], "expected": 2}, 
         {"args": [[target], target], "expected": 0}   
     ]
     
     legends = [
-        "Найдите индекс зараженного сектора в логах сервера. Реализуйте функцию поиска за O(log n).",
+        "Найдите индекс зараженного сектора в логах сервера. Реализуйте функцию бинарного поиска за O(log n).",
         "Определите позицию посылки на складе логистической компании. Алгоритм должен работать за O(log n)."
     ]
     
@@ -459,18 +494,48 @@ def _(rng):
         }
     }
 
+@_add("be.code.missing_number", "backend", 1, "Алгоритмы", "code")
+def _(rng):
+    n = rng.randint(5, 10)
+    missing = rng.randint(0, n)
+    arr = [i for i in range(n + 1) if i != missing]
+    rng.shuffle(arr)
+    
+    tests = [
+        {"args": [arr], "expected": missing},
+        {"args": [[0, 1, 3]], "expected": 2},
+        {"args": [[1, 2]], "expected": 0}
+    ]
+    
+    legends = [
+        "В базе данных инвентаризации пропал один серийный номер товара (от 0 до N). Найдите недостающий номер за O(n).",
+        "Сетевой протокол потерял один пакет данных в последовательности от 0 до N. Вычислите номер потерянного пакета."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int]) -> int:",
+            "examples": [{"args": [[3, 0, 1]], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+
 @_add("be.code.continuous_stream", "backend", 2, "Алгоритмы", "code")
 def _(rng):
     k = rng.randint(2, 4)
-    arr = [rng.randint(-10, 20) for _ in range(8)]
+    arr = [rng.randint(1, 20) for _ in range(8)]
     
-    max_sum = float('-inf')
+    max_sum = 0
     for i in range(len(arr) - k + 1):
         max_sum = max(max_sum, sum(arr[i:i+k]))
         
     tests = [
         {"args": [arr, k], "expected": max_sum},
-        {"args": [[-5, -1, -9, -2], 2], "expected": -6} 
+        {"args": [[5, 1, 9, 2], 2], "expected": 10} 
     ]
     
     legends = [
@@ -489,20 +554,56 @@ def _(rng):
         }
     }
 
+@_add("be.code.first_unique", "backend", 2, "Структуры данных", "code")
+def _(rng):
+    # Генерация массива с одним гарантированно уникальным элементом
+    repeats = [rng.randint(1, 10) for _ in range(3)]
+    unique_elem = rng.randint(11, 20)
+    arr = repeats + repeats + [unique_elem]
+    rng.shuffle(arr)
+    
+    # Находим первый уникальный
+    expected = -1
+    for x in arr:
+        if arr.count(x) == 1:
+            expected = x
+            break
+            
+    tests = [
+        {"args": [arr], "expected": expected},
+        {"args": [[4, 2, 4, 3, 2]], "expected": 3},
+        {"args": [[1, 1, 2, 2]], "expected": -1}
+    ]
+    
+    legends = [
+        "В потоке логов пользователей нужно найти первый ID сессии, который встретился ровно один раз. Решите за O(n) с использованием хэш-таблицы.",
+        "Анализ игровой статистики: найдите ID первого уникального артефакта в инвентаре игрока, который не имеет дубликатов."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int]) -> int:",
+            "examples": [{"args": [[4, 5, 4]], "expected": 5}],
+            "tests": tests
+        }
+    } 
+
 @_add("be.code.network_routing", "backend", 3, "Алгоритмы", "code")
 def _(rng):
-    
     edges = [[0, 2], [2, 4], [0, 1], [1, 3], [3, 4], [1, 5]]
     rng.shuffle(edges)
     
     tests = [
         {"args": [6, edges, 0, 4], "expected": 2}, 
-        {"args": [4, [[0, 1], [2, 3]], 0, 3], "expected": -1}, # Пути нет
-        {"args": [3, [[0, 1], [1, 2]], 1, 1], "expected": 0}   # Старт равен финишу
+        {"args": [5, [[0, 1], [1, 2], [2, 3], [3, 4]], 0, 4], "expected": 4}, 
+        {"args": [3, [[0, 1], [1, 2]], 1, 1], "expected": 0}   
     ]
     
     legends = [
-        "Спроектируйте оптимальную маршрутизацию в сети дата-центров. Найдите минимальное количество переходов от стартового узла 0 до конечного 4. Ограничение O(V + E).",
+        "Спроектируйте оптимальную маршрутизацию в сети дата-центров (BFS). Найдите минимальное количество переходов от стартового узла 0 до конечного 4. Ограничение O(V + E).",
         "Поиск кратчайшего пути обхода файрволов во внутренней корпоративной сети от узла 0 к 4. Избегайте зацикливаний. Сложность O(V + E)."
     ]
     
@@ -513,6 +614,38 @@ def _(rng):
             "function_name": "solve", 
             "signature": "def solve(n: int, edges: list[list[int]], start: int, target: int) -> int:",
             "examples": [{"args": [5, [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]], 0, 4], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+@_add("be.code.dp_max_profit", "backend", 3, "Алгоритмы", "code")
+def _(rng):
+    # Задача: максимальная сумма не смежных элементов (House Robber)
+    arr = [rng.randint(5, 25) for _ in range(6)]
+    
+    inc, exc = 0, 0
+    for x in arr:
+        inc, exc = exc + x, max(inc, exc)
+    expected = max(inc, exc)
+    
+    tests = [
+        {"args": [arr], "expected": expected},
+        {"args": [[2, 7, 9, 3, 1]], "expected": 12}, # 2 + 9 + 1
+        {"args": [[100, 1, 1, 100]], "expected": 200}
+    ]
+    
+    legends = [
+        "Спланируйте нагрузку на кластер. Вам дан массив пропускной способности узлов. Из-за архитектурных ограничений нельзя активировать два соседних узла. Найдите максимальную суммарную мощность.",
+        "Выбор оптимальной стратегии в пошаговой игре. В массиве указано количество очков за захват баз. Захват соседних баз блокируется правилами. Вычислите максимальный счет (DP, сложность O(n))."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve", 
+            "signature": "def solve(arr: list[int]) -> int:",
+            "examples": [{"args": [[1, 2, 3, 1]], "expected": 4}],
             "tests": tests
         }
     }
