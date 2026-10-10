@@ -1,4 +1,4 @@
-"""Разбор резюме через GigaChat (Вариант A)."""
+"""Разбор резюме через GigaChat."""
 import json
 import logging
 import os
