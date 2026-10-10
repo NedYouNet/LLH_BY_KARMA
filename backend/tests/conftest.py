@@ -36,6 +36,7 @@ def engine():
     Base.metadata.create_all(eng)
     yield eng
     Base.metadata.drop_all(eng)
+    eng.dispose()  # закрыть соединения: иначе на PostgreSQL за прогон кончаются слоты подключений
 
 
 @pytest.fixture()

@@ -95,3 +95,59 @@ def test_ml_service_contract_cv_parse(client, monkeypatch):
         raise httpx.HTTPStatusError("502 LLM вернула мусор", request=None, response=None)
     monkeypatch.setattr(ml_client.httpx, "post", down)
     assert _parse(client, "cv2@test.ru")["source"] == "fallback"
+
+
+RESUME_WITH_CONTACTS = """Иван Петров
+Почта: ivan.petrov+cv@mail.ru, запасная IVAN@Example.COM
+Телефон +7 (999) 123-45-67, рабочий 8 912 000 11 22, Минск +375 29 123-45-67
+Telegram: @ivan_tg_main, ещё t.me/ivan_link и просто @ivan_dev_2026
+Python, FastAPI, PostgreSQL. В Java писал @Override, во FastAPI — @app.get. Зарплата 150 000 - 220 000.
+"""
+SECRETS = ["ivan.petrov+cv@mail.ru", "IVAN@Example.COM", "999) 123-45-67", "912 000 11 22", "29 123-45-67",
+           "ivan_tg_main", "ivan_link", "ivan_dev_2026"]
+
+
+def test_external_ml_payload_has_no_contacts_but_keeps_skills(monkeypatch):
+    """Проверяем ровно то, что уходит во внешнюю модель (payload), а не только ответ API."""
+    from app.core.config import settings
+    from app.services import ml_client
+    sent = {}
+
+    class Resp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"grade": "Middle", "skills": ["Python"]}
+
+    def fake_post(url, json=None, timeout=None, **_):
+        sent["payload"] = json
+        return Resp()
+    monkeypatch.setattr(settings, "ml_service_url", "http://ml:8000")
+    monkeypatch.setattr(ml_client.httpx, "post", fake_post)
+    out = ml_client.parse_resume_via_ml(RESUME_WITH_CONTACTS)
+    text = sent["payload"]["cv_text"]
+    assert list(sent["payload"]) == ["cv_text"]                       # больше ничего не передаём
+    for secret in SECRETS:
+        assert secret not in text, secret
+    assert text.count("[email]") == 2 and text.count("[телефон]") == 3 and text.count("[telegram]") == 3
+    assert "Python, FastAPI, PostgreSQL" in text and "@Override" in text and "@app.get" in text  # стек на месте
+    assert out["email"] == "ivan.petrov+cv@mail.ru" and out["phone"]  # контакты извлечены локально, из исходника
+
+
+def test_ml_failure_log_has_no_resume_text(monkeypatch, caplog):
+    import logging
+
+    import httpx
+    from app.core.config import settings
+    from app.services import ml_client
+
+    def down(*_, **__):
+        raise httpx.ConnectError("нет связи")
+    monkeypatch.setattr(settings, "ml_service_url", "http://ml:8000")
+    monkeypatch.setattr(ml_client.httpx, "post", down)
+    with caplog.at_level(logging.DEBUG):
+        assert ml_client.parse_resume_via_ml(RESUME_WITH_CONTACTS) is None
+    assert "ML-сервис недоступен" in caplog.text
+    for secret in SECRETS + ["Иван Петров", "FastAPI"]:
+        assert secret not in caplog.text

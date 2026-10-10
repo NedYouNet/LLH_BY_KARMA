@@ -12,8 +12,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import (auth, candidate, employer, fsp, fsp_id, invitations, reference, short_tasks, testing,
-                             vacancies)
+from app.api.routers import (auth, candidate, employer, fsp, fsp_id, invitations, mock_ats, reference, short_tasks,
+                             testing, vacancies)
+from app.core.buildinfo import applied_migration, code_fingerprint
 from app.core.config import check_production_settings, settings
 from app.core.crypto import get_cipher
 from app.core.errors import AppError, app_error_handler, validation_error_handler
@@ -38,7 +39,7 @@ if _problems:  # в продакшене с небезопасными наст�
 get_cipher()  # проверяем ключи шифрования при старте, а не при первом запросе
 
 # Версия бэкенда: видна в Swagger и в /api/health — по ней сразу понятно, свежий ли контейнер запущен
-API_VERSION = "1.3.0"
+API_VERSION = "1.4.0"
 
 app = FastAPI(title=settings.app_name, version=API_VERSION, description=DESCRIPTION,
               docs_url="/docs", redoc_url="/redoc", openapi_url="/openapi.json")
@@ -84,11 +85,15 @@ async def timing_header(request: Request, call_next):
 
 for r in (auth.router, fsp_id.router, reference.router, candidate.router, testing.router, employer.router,
           employer.ats_router, invitations.router, vacancies.router, short_tasks.router, fsp.router,
-          fsp_id.mock_router):
+          fsp_id.mock_router, mock_ats.router):
     app.include_router(r, prefix=settings.api_prefix)
 
 
-@app.get("/api/health", tags=["Служебное"], summary="Проверка, что сервис жив")
+@app.get("/api/health", tags=["Служебное"], summary="Проверка, что сервис жив и какой код запущен")
 def health():
+    """`build.code` — отпечаток кода (свежая ли сборка), `build.migration` — применённая миграция БД."""
+    from app.core.database import engine
     return {"status": "ok", "env": settings.environment, "version": API_VERSION,
-            "features": ["employer_needs", "fsp_id_login", "ats_webhooks", "unverified_grades", "ml_in_process"]}
+            "build": {"code": code_fingerprint(), "migration": applied_migration(engine)},
+            "features": ["employer_needs", "fsp_id_login", "ats_webhooks", "unverified_grades", "ml_in_process",
+                         "mock_ats_receiver"]}

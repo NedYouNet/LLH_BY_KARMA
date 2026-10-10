@@ -51,3 +51,22 @@ class AtsDelivery(Base):
     ok: Mapped[bool] = mapped_column(default=False)
     error: Mapped[str | None] = mapped_column(String(500), default=None)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+
+class MockAtsEvent(Base):
+    """
+    Встроенный ТЕСТОВЫЙ приёмник вебхуков (имитация ATS работодателя, только вне продакшена).
+    Сюда пишутся события, которые платформа отправила на адрес /api/mock-ats/webhook: работодатель
+    видит, что событие дошло и подпись верна, — без настоящей ATS и без интернета.
+    """
+
+    __tablename__ = "mock_ats_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employer_id: Mapped[int] = mapped_column(ForeignKey("employer_profiles.id", ondelete="CASCADE"), index=True)
+    event: Mapped[str] = mapped_column(String(60))
+    event_id: Mapped[str] = mapped_column(String(64), unique=True)  # повтор того же события не создаёт дубль
+    signature_valid: Mapped[bool] = mapped_column(default=False)
+    # Тело события — с контактами кандидата (ПДн) -> храним зашифрованным
+    payload: Mapped[str | None] = mapped_column(EncryptedText, default=None)
+    received_at: Mapped[datetime] = mapped_column(default=utcnow)

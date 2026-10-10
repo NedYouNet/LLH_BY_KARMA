@@ -71,3 +71,19 @@ class AtsConfigOut(BaseModel):
     secret_hint: str | None = Field(None, examples=["…x9Qa"])
     signature_header: str
     recent_deliveries: list[AtsDeliveryOut]
+
+
+class MockAtsEventOut(BaseModel):
+    id: int
+    event: str = Field(examples=["invitation.accepted"])
+    event_id: str
+    signature_valid: bool = Field(description="Подпись X-FSP-Signature проверена секретом компании")
+    received_at: datetime
+    payload: dict | None = Field(None, description="Тело события, как его получила бы ATS (с контактами кандидата)")
+
+
+class MockAtsReceipt(BaseModel):
+    received: bool
+    duplicate: bool = Field(description="True — это событие уже приходило (повтор не создаёт дубль)")
+    event_id: str
+    signature_valid: bool

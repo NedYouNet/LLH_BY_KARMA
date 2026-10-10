@@ -145,3 +145,17 @@ def test_export_access_log_and_delete_account(client, db):
     assert db.execute(text("SELECT count(*) FROM candidate_profiles")).scalar() == 0
     assert db.execute(text("SELECT count(*) FROM invitations")).scalar() == 0
     assert client.post("/api/auth/login", json={"email": "cand@test.ru", "password": "Secure2026x"}).status_code == 401
+
+
+def test_health_shows_build_fingerprint(client, tmp_path):
+    """Отпечаток кода в /api/health: разный код — разный отпечаток, переносы строк Windows не влияют."""
+    from app.core.buildinfo import fingerprint_of
+    body = client.get("/api/health").json()
+    assert body["version"] == "1.4.0" and len(body["build"]["code"]) == 12 and "migration" in body["build"]
+    (tmp_path / "app").mkdir()
+    (tmp_path / "app" / "a.py").write_bytes(b"x = 1\ny = 2\n")
+    lf = fingerprint_of(tmp_path)
+    (tmp_path / "app" / "a.py").write_bytes(b"x = 1\r\ny = 2\r\n")     # тот же код, сохранённый в Windows
+    assert fingerprint_of(tmp_path) == lf
+    (tmp_path / "app" / "a.py").write_bytes(b"x = 1\ny = 3\n")         # код изменился
+    assert fingerprint_of(tmp_path) != lf

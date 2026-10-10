@@ -152,6 +152,9 @@ def ats_configure(data: AtsConfigIn, e: EmployerProfile = Depends(current_employ
     """
     Когда кандидат примет ваше приглашение, в ATS придёт POST с событием `invitation.accepted` и карточкой
     кандидата. Проверяйте подпись: `X-FSP-Signature = sha256=HMAC_SHA256(secret, X-FSP-Timestamp + "." + тело)`.
+
+    Нет своей ATS? На демо-стенде есть встроенный тестовый приёмник:
+    `http://localhost:8000/api/mock-ats/webhook`, полученные события — `GET /api/mock-ats/events`.
     """
     return AtsService(db).configure(e, data.webhook_url, data.rotate_secret)
 

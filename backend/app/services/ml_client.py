@@ -32,11 +32,36 @@ def parse_resume_in_process(pdf_bytes: bytes, text: str, filename: str) -> dict 
         return None
 
 
+# Самостоятельный ник «@ivan_dev» (Telegram: 5–32 символа). Не трогаем «@app.get», «@pytest.fixture» (после ника
+# точка) и частые аннотации кода — это стек кандидата, а не контакт.
+_HANDLE = re.compile(r"(?<![\w@.])@([A-Za-z][A-Za-z0-9_]{4,31})(?![\w.@])")
+_CODE_ANNOTATIONS = {"override", "autowired", "component", "service", "repository", "controller", "restcontroller",
+                     "entity", "table", "column", "test", "bean", "configuration", "transactional", "getter", "setter",
+                     "builder", "dataclass", "property", "staticmethod", "classmethod", "abstractmethod", "inject",
+                     "input", "output", "media", "keyframes", "import", "mixin", "include", "extend"}
+# Международный номер «+375 29 123-45-67»: плюс и 10–15 цифр (российские номера ловит _PHONE выше)
+_INTL_PHONE = re.compile(r"\+\d[\d\s()\-]{7,20}\d")
+
+
+def _mask_handle(m: re.Match) -> str:
+    return m.group(0) if m.group(1).lower() in _CODE_ANNOTATIONS else "[telegram]"
+
+
+def _mask_intl_phone(m: re.Match) -> str:
+    return "[телефон]" if 10 <= sum(ch.isdigit() for ch in m.group(0)) <= 15 else m.group(0)
+
+
 def _mask_contacts(text: str) -> str:
-    """152-ФЗ, минимизация: во внешнюю модель не уходят почта, телефон и Telegram (их бэкенд находит сам)."""
+    """
+    152-ФЗ, минимизация: во внешнюю модель не уходят почта, телефоны (российские и международные), Telegram
+    (ник, ссылка t.me, «tg:»/«telegram:»). Контакты бэкенд находит в исходном тексте сам, локально.
+    Порядок важен: сначала почта (в ней тоже есть «@»), потом телефоны, потом Telegram.
+    """
     text = _EMAIL.sub("[email]", text)
     text = _PHONE.sub("[телефон]", text)
-    return _TG.sub("[telegram]", text)
+    text = _INTL_PHONE.sub(_mask_intl_phone, text)
+    text = _TG.sub("[telegram]", text)
+    return _HANDLE.sub(_mask_handle, text)
 
 
 def _from_ml_service(data: dict, text: str) -> dict:
@@ -87,7 +112,10 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
 
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 _PHONE = re.compile(r"(?:\+7|8)[\s(-]*\d{3}[\s)-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}")
-_TG = re.compile(r"(?:t\.me/|telegram[:\s]*|tg[:\s]*)@?([A-Za-z0-9_]{4,})", re.IGNORECASE)
+# Telegram: ссылка t.me/ник или слово «telegram»/«tg» ОТДЕЛЬНО и с разделителем («tg: ник», «Telegram @ник»).
+# Раньше «tg» ловилось внутри слов: «PostgreSQL» превращался в «Pos[telegram]».
+_TG = re.compile(r"(?<![\w.])(?:t\.me/|(?:telegram|телеграм|tg|тг)(?:\s*[:\-—]\s*|\s+))@?([A-Za-z0-9_]{4,})",
+                 re.IGNORECASE)
 _EXP = re.compile(r"(?:опыт[^\d\n]{0,25}|experience[^\d\n]{0,15})(\d{1,2}(?:[.,]\d)?)\s*(?:год|лет|года|years?)", re.IGNORECASE)
 _NAME = re.compile(r"^\s*([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)\s*$", re.MULTILINE)
 _CITY = re.compile(r"(?:город|г\.|city)[:\s]+([А-ЯЁA-Z][а-яёa-z-]+)", re.IGNORECASE)
@@ -114,7 +142,8 @@ def fallback_parse(text: str) -> dict:
         grade_guess = "intern" if exp_years < 0.5 else "junior" if exp_years < 2 else "middle" if exp_years < 4 else "senior"
     name = _NAME.search(text)
     city = _CITY.search(text)
-    tg = _TG.search(text)
+    tg = _TG.search(text) or next((m for m in _HANDLE.finditer(text) if m.group(1).lower() not in _CODE_ANNOTATIONS),
+                                  None)
     phone = _PHONE.search(text)
     email = _EMAIL.search(text)
     return {

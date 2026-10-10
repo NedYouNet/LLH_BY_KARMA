@@ -19,13 +19,17 @@ from datetime import timedelta
 from faker import Faker
 from sqlalchemy import text
 
+from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine, utcnow
 from app.core.security import hash_password
 from app.models import (
     Application, CandidateProfile, EmployerProfile, GradeHistory, Invitation, ShortTask, ShortTaskSubmission, User,
     Vacancy,
 )
-from app.reference import GRADE_CODES, SKILLS, SOFT_SKILLS, TEAM_ROLES
+from app.models import TestAttempt
+from app.reference import GRADE_CODES, GRADE_LEVEL, SKILLS, SOFT_SKILLS, TEAM_ROLES, category_label
+from app.schemas.testing import GradeDecision
+from app.services import testing_engine
 from app.services.fsp_service import MockFspRegistry, compute_fsp_score
 
 fake = Faker("ru_RU")
@@ -198,10 +202,65 @@ def make_user(db, email: str, role: str, pw_hash: str) -> User:
     return u
 
 
+# Эталонное решение задачи на код в демо-попытках: настоящий код кандидатов мы не выдумываем,
+# поэтому при заливке демо-данных такое решение засчитывается без запуска (см. _trusted_run).
+SEED_SOLUTION = "# решение кандидата (демо-данные)"
+
+
+def _trusted_run(code: str, function_name: str, tests: list[dict]) -> dict:
+    ok = code == SEED_SOLUTION
+    return {"passed": len(tests) if ok else 0, "total": len(tests), "errors": [], "violations": []}
+
+
+def _wrong(item: dict) -> str:
+    if item["kind"] == "code":
+        return ""
+    if item.get("options"):
+        return next((o for o in item["options"] if o != item["answer"]), "")
+    return "—"
+
+
+def make_attempt(db, c: CandidateProfile, spec: str, grade: str, target: float, finished):
+    """
+    Завершённая попытка теста, посчитанная НАСТОЯЩИМ движком тестирования. Из неё же берутся балл профиля
+    и запись в истории грейда — поэтому балл попытки, профиля и причины присвоения всегда совпадают.
+    Ответы подбираются так, чтобы балл был не ниже цели (и не ниже порога 70%).
+    """
+    items = testing_engine.build_items(spec, grade, rng.randrange(2**31), settings.test_questions_count)
+    total = sum(i["weight"] for i in items)
+    target = max(target, settings.test_pass_threshold)
+    # Какие задания «решены неверно»: перебираем варианты (заданий ~10 -> ~1000 вариантов) и берём тот,
+    # где балл ближе всего к цели, но не ниже её
+    best, best_lost = 0, -1
+    for mask in range(1 << len(items)):
+        lost = sum(it["weight"] for k, it in enumerate(items) if mask >> k & 1)
+        if 100 * (total - lost) / total >= target and lost > best_lost:
+            best, best_lost = mask, lost
+    wrong = {it["id"] for k, it in enumerate(items) if best >> k & 1}
+    answers = {i["id"]: (_wrong(i) if i["id"] in wrong else (SEED_SOLUTION if i["kind"] == "code" else i["answer"]))
+               for i in items}
+    result = testing_engine.score_attempt(items, answers)
+    score = result["score"]
+    started = finished - timedelta(minutes=rng.randint(12, 28))
+    upgrade = score >= settings.test_upgrade_hint_threshold and GRADE_LEVEL[grade] < 3
+    decision = GradeDecision(grade_before=None, grade_after=grade, changed=True,
+                             message=f"Поздравляем! Ваша категория: {category_label(spec, grade)}",
+                             upgrade_suggested=upgrade,
+                             next_change_at=finished + timedelta(days=settings.grade_change_cooldown_days))
+    a = TestAttempt(candidate_id=c.id, specialization=spec, target_grade=grade, status="completed",
+                    seed=0, items=items, answers=answers, started_at=started,
+                    deadline_at=started + timedelta(minutes=settings.test_duration_minutes), finished_at=finished,
+                    score=score, passed=True, result={**result, "decision": decision.model_dump(mode="json")})
+    db.add(a)
+    db.flush()
+    return a, result
+
+
 def make_candidate(db, pw_hash: str, idx: int, with_fsp: bool, email: str | None = None,
                    spec: str | None = None, grade: str | None = None, full_name: str | None = None,
-                   verified: bool = True) -> CandidateProfile:
-    """verified=False — анкета заполнена, но тест ещё не пройден: виден работодателям с пометкой «не подтверждён»."""
+                   verified: bool = True, target_score: float | None = None) -> CandidateProfile:
+    """verified=False — анкета заполнена, но тест ещё не пройден: виден работодателям с пометкой «не подтверждён».
+    target_score — желаемый балл теста (по умолчанию случайный около 83)."""
     spec = spec or rng.choices(list(SPEC_WEIGHTS), weights=list(SPEC_WEIGHTS.values()))[0]
     grade = grade or rng.choices(GRADE_CODES, weights=GRADE_WEIGHTS)[0]
     male = rng.random() < 0.6
@@ -210,7 +269,7 @@ def make_candidate(db, pw_hash: str, idx: int, with_fsp: bool, email: str | None
     user = make_user(db, email or f"cand{idx}@demo.ru", "candidate", pw_hash)
     lo, hi = EXP_BY_GRADE[grade]
     skills = rng.sample(SKILLS[spec], k=rng.randint(4, 8))
-    score = round(min(100, max(70, rng.gauss(83, 8))), 1)
+    target = target_score if target_score is not None else min(100, max(70, rng.gauss(83, 8)))
     now = utcnow()
     assigned = now - timedelta(days=rng.randint(5, 200))
     c = CandidateProfile(
@@ -225,8 +284,6 @@ def make_candidate(db, pw_hash: str, idx: int, with_fsp: bool, email: str | None
         survey={"specialization": spec, "declared_grade": grade, "skills": skills, "submitted_at": assigned.isoformat()},
         declared_grade=grade, declared_specialization=spec,
         specialization=spec if verified else None, grade=grade if verified else None,
-        test_score=score if verified else None,
-        skill_scores={s: round(rng.uniform(0.5, 1.0), 2) for s in skills[:3]} if verified else {},
         grade_assigned_at=assigned if verified else None, grade_changed_at=assigned if verified else None,
         consent_processing=True, consent_publication=rng.random() > 0.03, consent_at=assigned,
         last_activity_at=now - timedelta(days=rng.choice([1, 3, 7, 15, 30, 60, 120])),
@@ -240,12 +297,24 @@ def make_candidate(db, pw_hash: str, idx: int, with_fsp: bool, email: str | None
     db.flush()
     MALE[c.id] = male
     if verified:
+        # Одна попытка — один результат: балл профиля, история и попытка согласованы
+        attempt, result = make_attempt(db, c, spec, grade, target, assigned)
+        c.test_score, c.skill_scores = attempt.score, result["by_skill"]
         db.add(GradeHistory(candidate_id=c.id, specialization=spec, old_grade=None, new_grade=grade,
-                            reason=f"Тест {score:.0f}/100", changed_at=assigned))
+                            attempt_id=attempt.id, reason=f"Тест {attempt.score:.0f}/100", changed_at=assigned))
     return c
 
 
 def main(do_reset: bool) -> None:
+    original_run = testing_engine.run_tests
+    testing_engine.run_tests = _trusted_run  # демо-попытки не запускают код (см. SEED_SOLUTION)
+    try:
+        _main(do_reset)
+    finally:
+        testing_engine.run_tests = original_run
+
+
+def _main(do_reset: bool) -> None:
     db = SessionLocal()
     if do_reset:
         reset(db)
@@ -275,13 +344,13 @@ def main(do_reset: bool) -> None:
     db.flush()
 
     candidates = [make_candidate(db, pw, 0, True, email="candidate@demo.ru", spec="backend", grade="middle",
-                                 full_name="Алексей Смирнов")]
+                                 full_name="Алексей Смирнов", target_score=88)]
     demo = candidates[0]
     demo.skills = ["Python", "FastAPI", "PostgreSQL", "Docker", "Redis", "Kafka", "Алгоритмы"]
     demo.about = ("Бэкенд-разработчик, 3 года пишу высоконагруженные API на Python и FastAPI. "
                   "Проектировал платёжный шлюз на PostgreSQL и Kafka, настраивал CI/CD и Docker. "
                   "Призёр соревнований ФСП по продуктовому программированию.")
-    demo.experience_years, demo.city, demo.test_score, demo.work_format = 3.2, "Москва", 88.0, "remote"
+    demo.experience_years, demo.city, demo.work_format = 3.2, "Москва", "remote"  # балл — из его попытки теста
     demo.phone, demo.telegram = "+79991234567", "@alexey_dev"
     fsp = MockFspRegistry().get_participant("100098")  # сильный профиль ФСП для демонстрации
     demo.fsp_id, demo.fsp_achievements, demo.fsp_score = "100098", fsp["achievements"], compute_fsp_score(fsp["achievements"])
@@ -301,7 +370,8 @@ def main(do_reset: bool) -> None:
                       position_title=demo_v.title, message="Алексей, видели ваш результат теста и призовые места ФСП. "
                       "Хотим пригласить на интервью в платёжную команду.", salary_from=240000, salary_to=300000,
                       contact_method="Telegram @hr_digital", status="sent", match_score=86.5,
-                      match_reasons=[{"type": "test", "label": "Бэкенд · Middle: тест 88/100", "positive": True}]))
+                      match_reasons=[{"type": "test", "label": f"Бэкенд · Middle: тест {demo.test_score:.0f}/100",
+                                     "positive": True}]))
     emp_by_id = {e.id: e for e in employers}
     for c in rng.sample(candidates[1:], 25):
         # приглашение — на настоящую вакансию той же специализации, с её названием и вилкой

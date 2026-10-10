@@ -9,7 +9,7 @@ Alembic смотрит на эти классы и сам генерирует S
 from app.models.enums import ApplicationStatus, AttemptStatus, InvitationStatus, Role, SubmissionStatus, VacancyStatus
 from app.models.user import User
 from app.models.candidate import CandidateProfile, GradeHistory
-from app.models.employer import AtsDelivery, EmployerProfile
+from app.models.employer import AtsDelivery, EmployerProfile, MockAtsEvent
 from app.models.vacancy import Application, Vacancy
 from app.models.testing import QuestionStat, TestAttempt
 from app.models.invitation import ContactAccessLog, Invitation, ShortlistItem
@@ -22,4 +22,5 @@ __all__ = [
     "User", "CandidateProfile", "GradeHistory", "EmployerProfile", "Vacancy", "Application",
     "TestAttempt", "QuestionStat", "Invitation", "ShortlistItem", "ContactAccessLog",
     "ShortTask", "ShortTaskSubmission", "EmployerNeed", "RefreshToken", "AuthEvent", "AtsDelivery",
+    "MockAtsEvent",
 ]
