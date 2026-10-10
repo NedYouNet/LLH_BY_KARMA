@@ -426,226 +426,375 @@ _static("ops.deploy.bluegreen", "devops", 3, "Kubernetes", "Главная ос�
 _static("ops.sre.slo", "devops", 3, "Prometheus", "SLO 99.9% за 30 дней — это примерно сколько допустимого простоя?",
         "≈ 43 минуты", ["≈ 4 часа", "≈ 7 часов", "≈ 4 минуты"])
 
-
-"""Банк заданий для ML-интеграции (Вариант A)"""
-
 # =====================================================================
-# 🟢 УРОВЕНЬ 0 (INTERN): Базовый синтаксис и циклы
+# 🖥 ФРОНТЕНД-РАЗРАБОТКА
 # =====================================================================
 
-@_add("be.code.sum_positives", "backend", 0, "Алгоритмы", "code")
+# УРОВЕНЬ 0: Intern
+@_add("fe.code.count_states", "frontend", 0, "Базовый синтаксис", "code")
 def _(rng):
-    # Генерация массива, гарантированно содержащего положительные числа
-    arr = [rng.randint(-10, 20) for _ in range(6)]
-    arr.append(rng.randint(1, 10)) 
-    
-    expected = sum(x for x in arr if x > 0)
+    states = [rng.choice(["success", "error", "pending"]) for _ in range(10)]
+    states.append("error")
+    expected = states.count("error")
     
     tests = [
-        {"args": [arr], "expected": expected},
-        {"args": [[-5, -2, 0, 10, 5]], "expected": 15},
-        {"args": [[-1, -2, -3]], "expected": 0}
+        {"args": [states], "expected": expected},
+        {"args": [["success", "success"]], "expected": 0},
+        {"args": [["error", "error"]], "expected": 2}
     ]
     
     legends = [
-        "Бухгалтерия прислала сырой лог транзакций. Напишите функцию, которая вернет сумму всех положительных пополнений счета.",
-        "Вы анализируете телеметрию датчиков умного дома. Посчитайте суммарное значение всех метрик, которые строго больше нуля."
+        "Вам пришел массив статусов загрузки компонентов от Redux. Посчитайте, сколько раз встречается статус 'error'.",
+        "Проанализируйте логи ответов API на клиенте. Найдите и верните общее количество ошибок (строк 'error') в массиве."
     ]
     
     return {
         "text": rng.choice(legends),
         "answer": None,
         "code": {
-            "function_name": "solve", 
-            "signature": "def solve(arr: list[int]) -> int:",
-            "examples": [{"args": [[-1, 5, 2, -10]], "expected": 7}],
+            "function_name": "solve",
+            "signature": "def solve(states: list[str]) -> int:",
+            "examples": [{"args": [["error", "success", "error"]], "expected": 2}],
             "tests": tests
         }
     }
 
-
-@_add("be.code.sequence_lookup", "backend", 1, "Алгоритмы", "code")
+# УРОВЕНЬ 2: Middle
+@_add("fe.code.debounce_sim", "frontend", 2, "Алгоритмы", "code")
 def _(rng):
-    target = rng.randint(10, 50)
-    base_arr = rng.sample(range(100), 7)
-    if target in base_arr:
-        base_arr.remove(target)
-    arr = sorted(base_arr + [target])
+    delay = rng.randint(2, 4)
+    # Массив миллисекунд, когда пользователь кликал на кнопку
+    clicks = sorted([rng.randint(1, 20) for _ in range(7)])
     
-    tests = [
-        {"args": [arr, target], "expected": arr.index(target)},
-        {"args": [[10, 20, 30, 40], 30], "expected": 2}, 
-        {"args": [[target], target], "expected": 0}   
-    ]
-    
-    legends = [
-        "Найдите индекс зараженного сектора в логах сервера. Реализуйте функцию бинарного поиска за O(log n).",
-        "Определите позицию посылки на складе логистической компании. Алгоритм должен работать за O(log n)."
-    ]
-    
-    return {
-        "text": rng.choice(legends),
-        "answer": None,
-        "code": {
-            "function_name": "solve", 
-            "signature": "def solve(nums: list[int], target: int) -> int:",
-            "examples": [{"args": [[10, 20, 30, 40], 30], "expected": 2}],
-            "tests": tests
-        }
-    }
-
-@_add("be.code.missing_number", "backend", 1, "Алгоритмы", "code")
-def _(rng):
-    n = rng.randint(5, 10)
-    missing = rng.randint(0, n)
-    arr = [i for i in range(n + 1) if i != missing]
-    rng.shuffle(arr)
-    
-    tests = [
-        {"args": [arr], "expected": missing},
-        {"args": [[0, 1, 3]], "expected": 2},
-        {"args": [[1, 2]], "expected": 0}
-    ]
-    
-    legends = [
-        "В базе данных инвентаризации пропал один серийный номер товара (от 0 до N). Найдите недостающий номер за O(n).",
-        "Сетевой протокол потерял один пакет данных в последовательности от 0 до N. Вычислите номер потерянного пакета."
-    ]
-    
-    return {
-        "text": rng.choice(legends),
-        "answer": None,
-        "code": {
-            "function_name": "solve", 
-            "signature": "def solve(arr: list[int]) -> int:",
-            "examples": [{"args": [[3, 0, 1]], "expected": 2}],
-            "tests": tests
-        }
-    }
-
-
-@_add("be.code.continuous_stream", "backend", 2, "Алгоритмы", "code")
-def _(rng):
-    k = rng.randint(2, 4)
-    arr = [rng.randint(1, 20) for _ in range(8)]
-    
-    max_sum = 0
-    for i in range(len(arr) - k + 1):
-        max_sum = max(max_sum, sum(arr[i:i+k]))
-        
-    tests = [
-        {"args": [arr, k], "expected": max_sum},
-        {"args": [[5, 1, 9, 2], 2], "expected": 10} 
-    ]
-    
-    legends = [
-        f"Анализ пиковой нагрузки DDoS-атаки. Найдите максимальную сумму подмассива фиксированного размера K={k} за O(n).",
-        f"Анализ непрерывного потока биржевых метрик. Найдите отрезок длины {k} с максимальной доходностью (сложность O(n))."
-    ]
-    
-    return {
-        "text": rng.choice(legends),
-        "answer": None,
-        "code": {
-            "function_name": "solve", 
-            "signature": "def solve(arr: list[int], k: int) -> int:",
-            "examples": [{"args": [[1, 4, 2, 10, 2], 3], "expected": 16}],
-            "tests": tests
-        }
-    }
-
-@_add("be.code.first_unique", "backend", 2, "Структуры данных", "code")
-def _(rng):
-    # Генерация массива с одним гарантированно уникальным элементом
-    repeats = [rng.randint(1, 10) for _ in range(3)]
-    unique_elem = rng.randint(11, 20)
-    arr = repeats + repeats + [unique_elem]
-    rng.shuffle(arr)
-    
-    # Находим первый уникальный
-    expected = -1
-    for x in arr:
-        if arr.count(x) == 1:
-            expected = x
-            break
+    fires = 0
+    last_fire = -float('inf')
+    for c in clicks:
+        if c >= last_fire + delay:
+            fires += 1
+            last_fire = c
             
     tests = [
-        {"args": [arr], "expected": expected},
-        {"args": [[4, 2, 4, 3, 2]], "expected": 3},
-        {"args": [[1, 1, 2, 2]], "expected": -1}
+        {"args": [clicks, delay], "expected": fires},
+        {"args": [[1, 2, 3, 4, 5], 5], "expected": 1}, # Все клики блокируются, кроме первого
+        {"args": [[10, 20, 30], 5], "expected": 3}     # Все клики проходят
     ]
     
     legends = [
-        "В потоке логов пользователей нужно найти первый ID сессии, который встретился ровно один раз. Решите за O(n) с использованием хэш-таблицы.",
-        "Анализ игровой статистики: найдите ID первого уникального артефакта в инвентаре игрока, который не имеет дубликатов."
+        "Напишите симуляцию функции Throttle. Дан массив таймстемпов кликов и задержка K. Функция срабатывает, только если с прошлого срабатывания прошло >= K времени. Верните количество успешных срабатываний.",
+        "Защита от двойного клика (Debounce/Throttle). Кнопка отправки формы блокируется на K миллисекунд после нажатия. Посчитайте, сколько реальных запросов уйдет на сервер при заданном массиве кликов."
     ]
     
     return {
         "text": rng.choice(legends),
         "answer": None,
         "code": {
-            "function_name": "solve", 
-            "signature": "def solve(arr: list[int]) -> int:",
-            "examples": [{"args": [[4, 5, 4]], "expected": 5}],
-            "tests": tests
-        }
-    } 
-
-@_add("be.code.network_routing", "backend", 3, "Алгоритмы", "code")
-def _(rng):
-    edges = [[0, 2], [2, 4], [0, 1], [1, 3], [3, 4], [1, 5]]
-    rng.shuffle(edges)
-    
-    tests = [
-        {"args": [6, edges, 0, 4], "expected": 2}, 
-        {"args": [5, [[0, 1], [1, 2], [2, 3], [3, 4]], 0, 4], "expected": 4}, 
-        {"args": [3, [[0, 1], [1, 2]], 1, 1], "expected": 0}   
-    ]
-    
-    legends = [
-        "Спроектируйте оптимальную маршрутизацию в сети дата-центров (BFS). Найдите минимальное количество переходов от стартового узла 0 до конечного 4. Ограничение O(V + E).",
-        "Поиск кратчайшего пути обхода файрволов во внутренней корпоративной сети от узла 0 к 4. Избегайте зацикливаний. Сложность O(V + E)."
-    ]
-    
-    return {
-        "text": rng.choice(legends),
-        "answer": None,
-        "code": {
-            "function_name": "solve", 
-            "signature": "def solve(n: int, edges: list[list[int]], start: int, target: int) -> int:",
-            "examples": [{"args": [5, [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]], 0, 4], "expected": 2}],
+            "function_name": "solve",
+            "signature": "def solve(clicks: list[int], k: int) -> int:",
+            "examples": [{"args": [[1, 3, 5, 10], 3], "expected": 2}],
             "tests": tests
         }
     }
 
-@_add("be.code.dp_max_profit", "backend", 3, "Алгоритмы", "code")
+# УРОВЕНЬ 3: Senior
+@_add("fe.code.cycle_detect", "frontend", 3, "Графы", "code")
 def _(rng):
-    # Задача: максимальная сумма не смежных элементов (House Robber)
-    arr = [rng.randint(5, 25) for _ in range(6)]
-    
-    inc, exc = 0, 0
-    for x in arr:
-        inc, exc = exc + x, max(inc, exc)
-    expected = max(inc, exc)
-    
+    # Тесты на топологическую сортировку / поиск циклов в зависимостях
     tests = [
-        {"args": [arr], "expected": expected},
-        {"args": [[2, 7, 9, 3, 1]], "expected": 12}, # 2 + 9 + 1
-        {"args": [[100, 1, 1, 100]], "expected": 200}
+        # Нет циклов (можно отрендерить)
+        {"args": [4, [[0, 1], [1, 2], [2, 3]]], "expected": 1},
+        # Есть цикл (ошибка рендеринга)
+        {"args": [3, [[0, 1], [1, 2], [2, 0]]], "expected": 0},
+        # Независимые компоненты
+        {"args": [2, []], "expected": 1}
     ]
     
     legends = [
-        "Спланируйте нагрузку на кластер. Вам дан массив пропускной способности узлов. Из-за архитектурных ограничений нельзя активировать два соседних узла. Найдите максимальную суммарную мощность.",
-        "Выбор оптимальной стратегии в пошаговой игре. В массиве указано количество очков за захват баз. Захват соседних баз блокируется правилами. Вычислите максимальный счет (DP, сложность O(n))."
+        "У вас есть N UI-компонентов и массив их зависимостей (компонент A должен рендериться до B). Определите, возможен ли рендер (нет ли циклических зависимостей). Верните 1 если возможно, и 0 если есть цикл.",
+        "Анализатор пакетов npm. Проверьте дерево импортов на наличие кольцевых зависимостей (Circular Dependency). Граф задан массивом ребер. Верните 1 (успех) или 0 (ошибка/цикл)."
     ]
     
     return {
         "text": rng.choice(legends),
         "answer": None,
         "code": {
-            "function_name": "solve", 
+            "function_name": "solve",
+            "signature": "def solve(n: int, edges: list[list[int]]) -> int:",
+            "examples": [{"args": [2, [[0, 1], [1, 0]]], "expected": 0}],
+            "tests": tests
+        }
+    }
+
+# =====================================================================
+# 📊 DATA SCIENCE / ML
+# =====================================================================
+
+# УРОВЕНЬ 0: Intern
+@_add("ds.code.clean_data", "data_science", 0, "Обработка данных", "code")
+def _(rng):
+    data = [rng.randint(-10, 50) for _ in range(10)]
+    expected = sum(x for x in data if x >= 0)
+    
+    tests = [
+        {"args": [data], "expected": expected},
+        {"args": [[-1, -5, -10]], "expected": 0},
+        {"args": [[10, 20, -1]], "expected": 30}
+    ]
+    
+    legends = [
+        "В датасете присутствуют битые значения (отрицательные числа). Напишите функцию очистки, которая вернет сумму только валидных (>= 0) элементов массива.",
+        "Препроцессинг данных для ML-модели. Отфильтруйте все аномалии (числа меньше нуля) и верните сумму оставшихся корректных фичей."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
             "signature": "def solve(arr: list[int]) -> int:",
-            "examples": [{"args": [[1, 2, 3, 1]], "expected": 4}],
+            "examples": [{"args": [[5, -2, 10]], "expected": 15}],
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 2: Middle
+@_add("ds.code.jaccard_sim", "data_science", 2, "Алгоритмы ML", "code")
+def _(rng):
+    a = [rng.randint(1, 10) for _ in range(5)]
+    b = [rng.randint(5, 15) for _ in range(5)]
+    
+    set_a, set_b = set(a), set(b)
+    intersection = len(set_a.intersection(set_b))
+    union = len(set_a.union(set_b))
+    expected = int((intersection / union) * 100) if union else 0
+    
+    tests = [
+        {"args": [a, b], "expected": expected},
+        {"args": [[1, 2, 3], [1, 2, 3]], "expected": 100},
+        {"args": [[1, 2], [3, 4]], "expected": 0}
+    ]
+    
+    legends = [
+        "Реализуйте метрику Жаккара (Jaccard Similarity) для сравнения двух кластеров данных. На вход подаются два массива. Верните процент сходства (от 0 до 100, округление вниз до целого `int`).",
+        "Для оценки рекомендательной системы вычислите пересечение аудиторий. Найдите отношение количества общих уникальных элементов к общему числу уникальных элементов в двух массивах. Верните результат в процентах (0-100, `int`)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(a: list[int], b: list[int]) -> int:",
+            "examples": [{"args": [[1, 2, 3], [2, 3, 4]], "expected": 50}], # 2 общих из 4 уникальных = 50%
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 3: Senior
+@_add("ds.code.connected_components", "data_science", 3, "Графы/ML", "code")
+def _(rng):
+    tests = [
+        # 5 узлов, 2 кластера: {0,1,2} и {3,4}
+        {"args": [5, [[0, 1], [1, 2], [3, 4]]], "expected": 2},
+        # Все изолированы (5 кластеров)
+        {"args": [5, []], "expected": 5},
+        # Один большой кластер
+        {"args": [3, [[0, 1], [1, 2]]], "expected": 1}
+    ]
+    
+    legends = [
+        "Алгоритм кластеризации (подобие DBSCAN). Вам дано N точек и массив пар точек, расстояние между которыми меньше Epsilon (ребра графа). Определите итоговое количество кластеров (связных компонент).",
+        "Анализ графа социальных связей для графовой нейросети (GNN). Найдите количество независимых подграфов (связных компонент) в представленной сети из N узлов."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(n: int, edges: list[list[int]]) -> int:",
+            "examples": [{"args": [4, [[0, 1], [2, 3]]], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+# =====================================================================
+# 🧪 ТЕСТИРОВАНИЕ (QA)
+# =====================================================================
+
+# УРОВЕНЬ 0: Intern
+@_add("qa.code.pass_rate", "qa", 0, "Аналитика", "code")
+def _(rng):
+    results = [rng.choice([1, 0]) for _ in range(8)]
+    results.append(1)
+    expected = results.count(1)
+    
+    tests = [
+        {"args": [results], "expected": expected},
+        {"args": [[0, 0, 0]], "expected": 0},
+        {"args": [[1, 1]], "expected": 2}
+    ]
+    
+    legends = [
+        "CI/CD пайплайн вернул массив результатов прогона юнит-тестов (1 - пройден, 0 - упал). Посчитайте общее количество успешно пройденных тестов.",
+        "Вы анализируете репорт автотестов. В массиве представлены бинарные статусы (1/0). Верните количество 'зеленых' (успешных) проверок."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(results: list[int]) -> int:",
+            "examples": [{"args": [[1, 0, 1, 1]], "expected": 3}],
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 2: Middle
+@_add("qa.code.coverage", "qa", 2, "Тестирование", "code")
+def _(rng):
+    tests = [
+        # Покрыты все состояния
+        {"args": [[1, 2, 3], [1, 2, 2, 3, 1]], "expected": 1},
+        # Покрыты не все
+        {"args": [[1, 2, 3, 4], [1, 2, 2]], "expected": 0},
+        # Пустые требования
+        {"args": [[], [1, 2]], "expected": 1}
+    ]
+    
+    legends = [
+        "Оценка покрытия (Test Coverage). У вас есть массив `required` (ID требований) и массив `tested` (ID проверенных фичей). Верните 1, если автотесты покрыли 100% требований, и 0 в противном случае.",
+        "Анализ матрицы трассировки. Убедитесь, что каждый запрошенный код состояния из первого массива хотя бы один раз встречается в логах второго массива. Верните 1 (покрыто) или 0 (не покрыто)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(required: list[int], tested: list[int]) -> int:",
+            "examples": [{"args": [[10, 20], [10, 30, 20]], "expected": 1}],
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 3: Senior
+@_add("qa.code.state_machine", "qa", 3, "Графы", "code")
+def _(rng):
+    tests = [
+        # Валидный путь 0 -> 1 -> 2
+        {"args": [[[0, 1], [1, 2], [0, 2]], [0, 1, 2]], "expected": 1},
+        # Невалидный переход 1 -> 0 (его нет в графе)
+        {"args": [[[0, 1], [1, 2]], [0, 1, 0]], "expected": 0},
+        # Путь из одного узла всегда валиден
+        {"args": [[[0, 1]], [0]], "expected": 1}
+    ]
+    
+    legends = [
+        "Тестирование на основе конечных автоматов (State Machine). Дан массив разрешенных переходов (ребер направленного графа) и массив истории переходов пользователя. Верните 1, если путь валиден, и 0, если пользователь совершил нелегальный переход.",
+        "Вы пишете автотест для сложного флоу корзины покупок. Проверьте, соответствует ли фактическая цепочка статусов заказа графу разрешенных бизнес-процессов. Возможен ли такой `path`? (1 - да, 0 - нет)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(valid_transitions: list[list[int]], path: list[int]) -> int:",
+            "examples": [{"args": [[[1, 2], [2, 3]], [1, 2, 3]], "expected": 1}],
+            "tests": tests
+        }
+    }
+
+# =====================================================================
+# ⚙️ DEVOPS / SRE
+# =====================================================================
+
+# УРОВЕНЬ 0: Intern
+@_add("do.code.error_5xx", "devops", 0, "Инфраструктура", "code")
+def _(rng):
+    logs = [rng.choice([200, 404, 500, 502, 503]) for _ in range(8)]
+    logs.append(500)
+    expected = sum(1 for code in logs if code >= 500)
+    
+    tests = [
+        {"args": [logs], "expected": expected},
+        {"args": [[200, 201, 404]], "expected": 0},
+        {"args": [[500, 502]], "expected": 2}
+    ]
+    
+    legends = [
+        "Скрипт мониторинга балансировщика. На вход подается массив HTTP-кодов ответов бэкенда. Посчитайте количество серверных ошибок (коды 500 и выше).",
+        "Анализ дампа логов Nginx. Верните количество инцидентов недоступности сервиса (коды >= 500) для настройки алертов в Grafana."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(http_codes: list[int]) -> int:",
+            "examples": [{"args": [[200, 502, 404, 500]], "expected": 2}],
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 2: Middle
+@_add("do.code.round_robin", "devops", 2, "Алгоритмы", "code")
+def _(rng):
+    servers = rng.randint(3, 5)
+    requests = rng.randint(10, 50)
+    start = rng.randint(0, servers - 1)
+    
+    # Решение: сдвиг по кругу
+    expected = (start + requests - 1) % servers
+    
+    tests = [
+        {"args": [servers, requests, start], "expected": expected},
+        {"args": [3, 1, 0], "expected": 0},
+        {"args": [5, 5, 2], "expected": 1} # 2, 3, 4, 0, 1 -> ответ 1
+    ]
+    
+    legends = [
+        "Балансировщик нагрузки работает по алгоритму Round Robin. У вас `N` серверов (индексы от 0 до N-1). Зная индекс сервера, который принял первый запрос (`start`), вычислите индекс сервера, который примет последний запрос из партии в `M` запросов.",
+        "Определите целевой Pod в Kubernetes кластере. Трафик распределяется строго по кругу (Round Robin). Найдите индекс узла, который обработает последнюю задачу из очереди."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(n: int, requests: int, start: int) -> int:",
+            "examples": [{"args": [4, 6, 0], "expected": 1}],
+            "tests": tests
+        }
+    }
+
+# УРОВЕНЬ 3: Senior
+@_add("do.code.cascade_fail", "devops", 3, "Графы", "code")
+def _(rng):
+    tests = [
+        # Упал 0. За ним упадут 1 и 2. Всего 3 (включая себя).
+        {"args": [4, [[0, 1], [0, 2], [3, 1]], 0], "expected": 3},
+        # Упал изолированный 3. Упадет только он.
+        {"args": [4, [[0, 1], [0, 2]], 3], "expected": 1},
+        # Циклическая зависимость (должно корректно обойтись без зацикливания)
+        {"args": [2, [[0, 1], [1, 0]], 0], "expected": 2}
+    ]
+    
+    legends = [
+        "Инцидент каскадного отказа микросервисов. Граф задает зависимости: ребро [A, B] значит, что падение A вызывает падение B. Узел `start` ушел в оффлайн. Посчитайте суммарное количество сервисов, которые упадут (включая сам `start`).",
+        "Анализ радиуса поражения (Blast Radius). В архитектуре AWS при отказе одного компонента отключаются зависимые. Вычислите количество затронутых узлов графа с помощью обхода в ширину (BFS) или глубину (DFS)."
+    ]
+    
+    return {
+        "text": rng.choice(legends),
+        "answer": None,
+        "code": {
+            "function_name": "solve",
+            "signature": "def solve(n: int, dependencies: list[list[int]], start: int) -> int:",
+            "examples": [{"args": [3, [[0, 1], [1, 2]], 0], "expected": 3}],
             "tests": tests
         }
     }
