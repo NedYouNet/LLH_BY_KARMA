@@ -400,3 +400,85 @@ def _(rng):
 def _(rng):
     tests = [{"args": [5, [[0, 1], [1, 2], [3, 4]]], "expected": 2}, {"args": [3, []], "expected": 3}]
     return {"text": "Анализ Blast Radius (радиус поражения). Вычислите количество изолированных подсетей в случае разрыва линков.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(n: int, edges: list[list[int]]) -> int:", "examples": [{"args": [4, [[0, 1], [2, 3]]], "expected": 2}], "tests": tests}}
+    # =====================================================================
+# ⚙️ БЭКЕНД-РАЗРАБОТКА
+# =====================================================================
+@_add("be.code.0_easy_sum", "backend", 0, "Основы", "code")
+def _(rng):
+    arr = [rng.randint(-10, 20) for _ in range(7)]
+    tests = [{"args": [arr], "expected": sum(x for x in arr if x > 0)}, {"args": [[-1, 5]], "expected": 5}]
+    return {"text": "Напишите функцию, которая вернет сумму всех положительных элементов массива (симуляция фильтрации валидных ID).", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[-1, 5, 2]], "expected": 7}], "tests": tests}}
+
+@_add("be.code.0_mid_count", "backend", 0, "Основы", "code")
+def _(rng):
+    logs = [rng.choice([200, 404, 500]) for _ in range(8)]
+    tests = [{"args": [logs], "expected": logs.count(500)}, {"args": [[200, 200]], "expected": 0}]
+    return {"text": "Вам дан лог HTTP-статусов ответа сервера. Подсчитайте количество критических ошибок (статус 500).", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[500, 200, 500]], "expected": 2}], "tests": tests}}
+
+@_add("be.code.0_hard_diff", "backend", 0, "Основы", "code")
+def _(rng):
+    arr = [rng.randint(1, 50) for _ in range(6)]
+    expected = max(abs(arr[i] - arr[i-1]) for i in range(1, len(arr))) if len(arr) > 1 else 0
+    tests = [{"args": [arr], "expected": expected}, {"args": [[10, 10]], "expected": 0}]
+    return {"text": "Анализ времени ответа БД. Найдите максимальную разницу (по модулю) между двумя соседними запросами в массиве.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[1, 10, 5]], "expected": 9}], "tests": tests}}
+
+@_add("be.code.1_easy_lookup", "backend", 1, "Алгоритмы", "code")
+def _(rng):
+    arr = sorted(rng.sample(range(100), 7))
+    target = rng.choice(arr)
+    tests = [{"args": [arr, target], "expected": arr.index(target)}, {"args": [[1], 1], "expected": 0}]
+    return {"text": "Дан отсортированный массив ID пользователей. Найдите индекс нужного пользователя. Ожидаемая сложность O(log n).", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int], target: int) -> int:", "examples": [{"args": [[10, 20, 30], 20], "expected": 1}], "tests": tests}}
+
+@_add("be.code.1_mid_missing", "backend", 1, "Алгоритмы", "code")
+def _(rng):
+    n = rng.randint(5, 10)
+    missing = rng.randint(0, n)
+    arr = [i for i in range(n + 1) if i != missing]
+    rng.shuffle(arr)
+    tests = [{"args": [arr], "expected": missing}, {"args": [[0, 1]], "expected": 2}]
+    return {"text": "В базе данных нарушился Sequence. В массиве уникальных ID от 0 до N пропущено одно значение. Найдите его.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[3, 0, 1]], "expected": 2}], "tests": tests}}
+
+@_add("be.code.1_hard_anagram", "backend", 1, "Структуры", "code")
+def _(rng):
+    tests = [{"args": ["listen", "silent"], "expected": 1}, {"args": ["rat", "car"], "expected": 0}]
+    return {"text": "Сравнение токенов. Проверьте, являются ли две строки анаграммами (состоят из одного набора символов). 1 - да, 0 - нет.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(s1: str, s2: str) -> int:", "examples": [{"args": ["abc", "cba"], "expected": 1}], "tests": tests}}
+
+@_add("be.code.2_easy_unique", "backend", 2, "Структуры", "code")
+def _(rng):
+    repeats = [rng.randint(1, 10) for _ in range(3)]
+    arr = repeats + repeats + [rng.randint(11, 20)]
+    rng.shuffle(arr)
+    expected = next((x for x in arr if arr.count(x) == 1), -1)
+    tests = [{"args": [arr], "expected": expected}, {"args": [[1, 1, 2, 2]], "expected": -1}]
+    return {"text": "Поиск коллизий. Найдите первый уникальный элемент массива за O(n) с использованием хэш-таблицы.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[4, 5, 4]], "expected": 5}], "tests": tests}}
+
+@_add("be.code.2_mid_stream", "backend", 2, "Алгоритмы", "code")
+def _(rng):
+    arr = [rng.randint(1, 20) for _ in range(8)]
+    k = rng.randint(2, 4)
+    expected = max(sum(arr[i:i+k]) for i in range(len(arr) - k + 1))
+    tests = [{"args": [arr, k], "expected": expected}, {"args": [[1, 2], 2], "expected": 3}]
+    return {"text": "Обработка потока. Используя скользящее окно, найдите максимальную сумму входящих байт в окне размера K.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int], k: int) -> int:", "examples": [{"args": [[1, 4, 2, 10, 2], 3], "expected": 16}], "tests": tests}}
+
+@_add("be.code.2_hard_intervals", "backend", 2, "Оптимизация", "code")
+def _(rng):
+    tests = [{"args": [[[1, 4], [2, 5], [7, 9]]], "expected": 2}, {"args": [[[1, 2], [3, 4]]], "expected": 1}]
+    return {"text": "Управление сессиями. Дан массив временных интервалов [start, end]. Вычислите макс. количество одновременно активных сессий.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(intervals: list[list[int]]) -> int:", "examples": [{"args": [[[1, 5], [2, 3]]], "expected": 2}], "tests": tests}}
+
+@_add("be.code.3_easy_dp", "backend", 3, "Алгоритмы", "code")
+def _(rng):
+    arr = [rng.randint(5, 25) for _ in range(6)]
+    inc, exc = 0, 0
+    for x in arr: inc, exc = exc + x, max(inc, exc)
+    tests = [{"args": [arr], "expected": max(inc, exc)}, {"args": [[2, 1, 1, 2]], "expected": 4}]
+    return {"text": "Динамическое программирование. Дан массив мощностей узлов. Найдите макс. сумму, если нельзя активировать два соседних.", "answer": None, "code": {"function_name": "solve", "signature": "def solve(arr: list[int]) -> int:", "examples": [{"args": [[1, 2, 3, 1]], "expected": 4}], "tests": tests}}
+
+@_add("be.code.3_mid_routing", "backend", 3, "Графы", "code")
+def _(rng):
+    tests = [{"args": [5, [[0, 1], [1, 2], [2, 3], [3, 4]], 0, 4], "expected": 4}, {"args": [3, [[0, 1]], 1, 1], "expected": 0}]
+    return {"text": "Направленный граф микросервисов. Найдите минимальное количество переходов (хопов) от start до target (BFS).", "answer": None, "code": {"function_name": "solve", "signature": "def solve(n: int, edges: list[list[int]], start: int, target: int) -> int:", "examples": [{"args": [3, [[0,1], [1,2]], 0, 2], "expected": 2}], "tests": tests}}
+
+@_add("be.code.3_hard_clusters", "backend", 3, "Графы", "code")
+def _(rng):
+    tests = [{"args": [5, [[0, 1], [1, 2], [3, 4]]], "expected": 2}, {"args": [3, []], "expected": 3}]
+    return {"text": "Шардирование БД. Дан граф узлов и связей. Верните количество изолированных кластеров (связных компонент).", "answer": None, "code": {"function_name": "solve", "signature": "def solve(n: int, edges: list[list[int]]) -> int:", "examples": [{"args": [4, [[0, 1], [2, 3]]], "expected": 2}], "tests": tests}}
