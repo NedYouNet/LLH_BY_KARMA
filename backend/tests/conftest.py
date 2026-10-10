@@ -90,8 +90,9 @@ def correct_answer(item: dict) -> str:
     """Правильный ответ на задание, взятый из БД (на фронт он не уходит)."""
     if item["kind"] != "code":
         return item["answer"]
-    table = {repr(t["args"][0]): t["expected"] for t in item["code"]["tests"]}
-    return f"def {item['code']['function_name']}(nums):\n    table = {table!r}\n    return table[repr(nums)]\n"
+    # эталонный «ответ» = таблица аргументы -> ожидаемый результат (подходит для задач с любым числом аргументов)
+    table = {repr(list(t["args"])): t["expected"] for t in item["code"]["tests"]}
+    return f"def {item['code']['function_name']}(*args):\n    table = {table!r}\n    return table[repr(list(args))]\n"
 
 
 def pass_test(client, db, headers, spec="backend", grade="junior", target_score: float | None = None) -> dict:
