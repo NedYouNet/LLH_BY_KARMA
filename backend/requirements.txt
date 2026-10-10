@@ -1,0 +1,17 @@
+# Основные зависимости бэкенда (Python 3.12)
+fastapi==0.115.12          # веб-фреймворк, генерирует Swagger
+uvicorn[standard]==0.34.2  # сервер, который запускает FastAPI
+sqlalchemy==2.0.41         # ORM: работа с БД через классы Python
+alembic==1.16.1            # миграции схемы БД
+psycopg[binary]==3.2.9     # драйвер PostgreSQL
+pydantic==2.11.5           # схемы и валидация данных
+pydantic-settings==2.9.1   # настройки из .env
+email-validator==2.2.0     # проверка email в схемах
+PyJWT==2.10.1              # JWT-токены
+python-multipart==0.0.20   # загрузка файлов (PDF-резюме) и форм
+httpx==0.28.1              # HTTP-клиент: запросы к ML-сервису + TestClient в тестах
+pypdf==5.6.0               # извлечение текста из PDF
+reportlab==4.4.1           # генерация PDF-профиля
+openpyxl==3.1.5            # таблица с реальными результатами ФСП (data/fsp_results.xlsx)
+Faker==37.3.0              # синтетические данные для scripts/seed.py
+cryptography==45.0.5       # AES-256-GCM шифрование персональных данных в БД

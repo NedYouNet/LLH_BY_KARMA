@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+.pytest_cache/
+.idea/
+.vscode/
+*.db
+node_modules/
+dist/
+backend/scripts/output/

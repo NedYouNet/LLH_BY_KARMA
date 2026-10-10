@@ -1,0 +1,74 @@
+# Запуск всего проекта одной командой:   docker compose up --build
+#   API + Swagger:  http://localhost:8000/docs
+#   Почта (Mailpit): http://localhost:8025   — сюда приходят письма подтверждения
+# Демо-данные:      docker compose exec backend python -m scripts.seed --reset
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fsp
+      POSTGRES_PASSWORD: fsp
+      POSTGRES_DB: fsp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fsp -d fsp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # веб-интерфейс почты
+      - "1025:1025"   # SMTP
+
+  backend:
+    build: ./backend
+    environment:
+      ENVIRONMENT: dev
+      DATABASE_URL: postgresql+psycopg://fsp:fsp@db:5432/fsp
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-for-production-0123456789}
+      DATA_ENCRYPTION_KEYS: ${DATA_ENCRYPTION_KEYS:-}   # на сервере задать в .env (см. backend/README.md)
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      BACKEND_PUBLIC_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:5173
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-}   # пусто — встроенный парсер; http://ml:8000 — ML-сервис участника 3
+      CORS_ORIGINS: "*"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
+      TEST_QUESTIONS_COUNT: ${TEST_QUESTIONS_COUNT:-10}
+      FSP_ID_MODE: ${FSP_ID_MODE:-mock}
+      FSP_ID_ISSUER: ${FSP_ID_ISSUER:-}
+      FSP_ID_CLIENT_SECRET: ${FSP_ID_CLIENT_SECRET:-dev-fsp-id-client-secret-change-me}
+    volumes:
+      - ./backend/data:/app/data   # таблица реальных результатов ФСП: правки видны без пересборки
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  # ML-сервис участника 3 (FastAPI + GigaChat), код — в папке ml/.
+  # Включить: раскомментировать блок и в .env задать ML_SERVICE_URL=http://ml:8000 и GIGA_TOKEN=...
+  # Внутри сети Docker он слушает 8000, снаружи — 8001 (8000 занят основным бэкендом).
+  # Без токена или при сбое GigaChat бэкенд сам переключается на встроенный парсер — демо не падает.
+  # ml:
+  #   build: ./ml
+  #   environment:
+  #     GIGA_TOKEN: ${GIGA_TOKEN:-}
+  #   ports:
+  #     - "8001:8000"
+
+  # Фронтенд (участник 2)
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "5173:80"
+  #   depends_on: [backend]
+
+volumes:
+  pgdata:
