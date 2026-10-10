@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { employer, invitations, errorMessage } from '../api'
 import { buttonClass, secondaryClass, Field, ErrorNotice } from './ui'
 
-export default function InvitationModal({ candidate, onClose, onCreate }) {
+export default function InvitationModal({ candidate, vacancy, onClose, onCreate }) {
     const dialogRef = useRef(null)
     const [company, setCompany] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [form, setForm] = useState({ position_title: '', message: '', salary_from: '', salary_to: '', salary_type: 'gross', contact_method: '' })
+    const [form, setForm] = useState({ position_title: vacancy?.title || '', message: '', salary_from: vacancy?.salary_from || '', salary_to: vacancy?.salary_to || '', salary_type: vacancy?.salary_type || 'gross', contact_method: '' })
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
     useEffect(() => {
@@ -27,7 +27,7 @@ export default function InvitationModal({ candidate, onClose, onCreate }) {
         if (!company?.company_name?.trim()) { setError('Сначала сохраните название компании в её профиле.'); return }
         setBusy(true)
         try {
-            const result = await invitations.create({ candidate_id: candidate.id, position_title: form.position_title.trim() || undefined, message: form.message.trim(), salary_from: from, salary_to: to, salary_type: form.salary_type, contact_method: form.contact_method.trim() || undefined })
+            const result = await invitations.create({ candidate_id: candidate.id, vacancy_id: vacancy?.id, position_title: form.position_title.trim() || undefined, message: form.message.trim(), salary_from: from, salary_to: to, salary_type: form.salary_type, contact_method: form.contact_method.trim() || undefined })
             onCreate(result)
         } catch (failure) { setError(errorMessage(failure)) }
         finally { setBusy(false) }

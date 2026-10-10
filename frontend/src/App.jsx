@@ -13,6 +13,10 @@ import CandidateSettings from './components/CandidateSettings'
 import CandidateOverview from './components/CandidateOverview'
 import FspIdLogin from './components/FspIdLogin'
 import EmployerIntegrations from './components/EmployerIntegrations'
+import EmployerCandidates from './components/EmployerCandidates'
+import VacancyBoard from './components/VacancyBoard'
+import ApplicationBoard from './components/ApplicationBoard'
+import ShortTaskBoard from './components/ShortTaskBoard'
 import './App.css'
 
 const linkToken = new URLSearchParams(window.location.search).get('token') || ''
@@ -130,7 +134,7 @@ export default function App() {
     }
 
     return <main className="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-center justify-center">
-        <section className="w-full max-w-4xl rounded-2xl bg-white p-8 shadow-md">
+        <section className="w-full max-w-5xl rounded-2xl bg-white p-4 sm:p-8 shadow-md">
             <h1 className="text-3xl font-bold text-purple-600">Карьерная платформа ФСП</h1>
             {checking ? <p className="mt-6" role="status">Проверяем сессию…</p> : <>
                 {notice && <p role="status" className="mt-4 rounded-lg bg-purple-50 p-3">{notice}</p>}
@@ -157,20 +161,27 @@ export default function App() {
                     </div>
                     {account.role === 'candidate' && <>
                         <nav aria-label="Экраны кандидата" className="mt-6 flex flex-wrap gap-3">
-                            {Object.entries({ overview: 'Моя категория', profile: 'Профиль', survey: 'Анкета и тест', invitations: 'Приглашения', settings: 'Согласия и ФСП' }).map(([key, label]) => <button key={key} className={buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
+                            {Object.entries({ overview: 'Моя категория', profile: 'Профиль', survey: 'Анкета и тест', invitations: 'Приглашения', vacancies: 'Вакансии', applications: 'Отклики', tasks: 'Короткие задания', settings: 'Согласия и ФСП' }).map(([key, label]) => <button key={key} className={screen === key ? 'rounded-lg bg-purple-600 px-4 py-2 text-white' : buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
                         </nav>
                         {screen === 'overview' && <CandidateOverview onNavigate={setScreen} />}
                         {screen === 'profile' && <CandidateProfile />}
                         {screen === 'survey' && <CandidateQuestionnaire />}
                         {screen === 'invitations' && <CandidateInvitations />}
                         {screen === 'settings' && <CandidateSettings />}
+                        {screen === 'vacancies' && <VacancyBoard role="candidate" />}
+                        {screen === 'applications' && <ApplicationBoard role="candidate" />}
+                        {screen === 'tasks' && <ShortTaskBoard role="candidate" />}
                     </>}
                     {account.role === 'employer' && <>
                         <nav aria-label="Экраны работодателя" className="mt-6 flex flex-wrap gap-3">
-                            {Object.entries({ company: 'Компания', needs: 'Потребности и подбор', invitations: 'Приглашения', integrations: 'Интеграции' }).map(([key, label]) => <button key={key} className={buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
+                            {Object.entries({ company: 'Компания', needs: 'Потребности', search: 'Поиск кандидатов', vacancies: 'Вакансии', applications: 'Отклики', tasks: 'Короткие задания', invitations: 'Приглашения', integrations: 'Интеграции' }).map(([key, label]) => <button key={key} className={screen === key ? 'rounded-lg bg-purple-600 px-4 py-2 text-white' : buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
                         </nav>
                         {screen === 'company' && <EmployerProfile />}
                         {screen === 'needs' && <EmployerNeeds />}
+                        {screen === 'search' && <EmployerCandidates />}
+                        {screen === 'vacancies' && <VacancyBoard role="employer" />}
+                        {screen === 'applications' && <ApplicationBoard role="employer" />}
+                        {screen === 'tasks' && <ShortTaskBoard role="employer" />}
                         {screen === 'integrations' && <EmployerIntegrations />}
                         {screen === 'invitations' && <CandidateInvitations role="employer" />}
                     </>}

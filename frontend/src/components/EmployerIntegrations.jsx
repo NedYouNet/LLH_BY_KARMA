@@ -25,7 +25,15 @@ export default function EmployerIntegrations() {
         event.preventDefault()
         let parsed
         try { parsed = new URL(url.trim()) } catch { setError('Введите полный HTTPS-адрес вебхука.'); return }
-        if (parsed.protocol !== 'https:' || parsed.username || parsed.password) { setError('Используйте HTTPS-адрес без логина и пароля в URL.'); return }
+        const localDev = import.meta.env.DEV &&
+            parsed.protocol === 'http:' &&
+            ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
+
+        if ((parsed.protocol !== 'https:' && !localDev) ||
+            parsed.username || parsed.password) {
+            setError('Нужен HTTPS-адрес. При локальной разработке разрешён HTTP для localhost.')
+            return
+        }
         action('save', () => employer.configureAts(url.trim()))
     }
     return <section className="mt-6 space-y-4"><h2 className="text-xl font-bold">Интеграция с ATS</h2><p>Укажите адрес вебхука вашей системы подбора. Проверка отправляет тестовый запрос на этот адрес.</p><ResourceState resource={resource} /><ErrorNotice message={error} />{notice && <p role="status">{notice}</p>}

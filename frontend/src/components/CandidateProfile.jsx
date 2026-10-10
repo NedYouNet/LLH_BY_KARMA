@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { candidate, errorMessage } from '../api'
 
-const emptyForm = { fullName: '', skills: '', phone: '', experience: '', years: '', telegram: '', city: '' }
+const emptyForm = { fullName: '', skills: '', phone: '', experience: '', years: '', telegram: '', city: '', contactEmail: '', softSkills: '', teamRoles: '', workFormat: '', desiredSalary: '' }
 
 function fromProfile(profile) {
     return {
@@ -12,6 +12,11 @@ function fromProfile(profile) {
         years: profile.experience_years == null ? '' : String(profile.experience_years),
         telegram: profile.telegram || '',
         city: profile.city || '',
+        contactEmail: profile.contact_email || profile.email || '',
+        softSkills: (profile.soft_skills || []).join(', '),
+        teamRoles: (profile.team_roles || []).join(', '),
+        workFormat: profile.work_format || '',
+        desiredSalary: profile.desired_salary_from == null ? '' : String(profile.desired_salary_from),
     }
 }
 
@@ -24,6 +29,11 @@ function toProfile(form) {
         experience_years: form.years === '' ? 0 : Number(form.years),
         telegram: form.telegram.trim() || null,
         city: form.city.trim() || null,
+        contact_email: form.contactEmail.trim() || null,
+        soft_skills: [...new Set(form.softSkills.split(/[,;\n]/).map(x => x.trim()).filter(Boolean))],
+        team_roles: [...new Set(form.teamRoles.split(/[,;\n]/).map(x => x.trim()).filter(Boolean))],
+        work_format: form.workFormat || null,
+        desired_salary_from: form.desiredSalary === '' ? null : Number(form.desiredSalary),
     }
 }
 
@@ -76,6 +86,8 @@ export default function CandidateProfile() {
         if (!data.full_name) { setSaveError('Введите ФИО.'); return }
         if (data.full_name.length > 200) { setSaveError('ФИО: максимум 200 символов.'); return }
         if (!Number.isFinite(data.experience_years) || data.experience_years < 0 || data.experience_years > 60) { setSaveError('Опыт: от 0 до 60 лет.'); return }
+        if (data.desired_salary_from != null && (!Number.isSafeInteger(data.desired_salary_from) || data.desired_salary_from <= 0 || data.desired_salary_from > 10000000)) { setSaveError('Желаемая зарплата: целое число от 1 до 10 000 000 ₽.'); return }
+        if (data.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contact_email)) { setSaveError('Проверьте контактную почту.'); return }
         if (!data.skills.length) { setSaveError('Укажите свои навыки.'); return }
         if ((data.phone || '').length > 50) { setSaveError('Телефон: максимум 50 символов.'); return }
         if ((data.about || '').length > 5000) { setSaveError('Опыт и проекты: максимум 5000 символов.'); return }
@@ -155,21 +167,24 @@ export default function CandidateProfile() {
                 <label className="block">Опыт в годах
                     <input type="number" min="0" max="60" step="0.5" value={form.years} onChange={event => change('years', event.target.value)} className="mt-1 w-full rounded-lg border p-3" />
                 </label>
-                {Object.entries({ telegram: 'Telegram', city: 'Город' }).map(([key, title]) => <label key={key} className="block">{title}<input maxLength={100} value={form[key]} onChange={event => change(key, event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label>)}
+                {Object.entries({ contactEmail: 'Контактная почта', softSkills: 'Soft skills через запятую', teamRoles: 'Командные роли через запятую', telegram: 'Telegram', city: 'Город' }).map(([key, title]) => <label key={key} className="block">{title}<input type={key === 'contactEmail' ? 'email' : 'text'} maxLength={key === 'softSkills' || key === 'teamRoles' ? 2000 : 100} value={form[key]} onChange={event => change(key, event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label>)}
                 <label className="block">
                     <span className="mb-1 block">Опыт и проекты</span>
                     <textarea rows={5} maxLength={5000} placeholder="Работа, задачи, учебные проекты" value={form.experience} onChange={event => change('experience', event.target.value)} className="w-full rounded-lg border border-gray-300 p-3" />
                 </label>
+                <label className="block">Формат работы<select className="mt-1 w-full rounded-lg border p-3" value={form.workFormat} onChange={e => change('workFormat', e.target.value)}><option value="">Не выбран</option><option value="remote">Удалённо</option><option value="office">В офисе</option><option value="hybrid">Гибрид</option></select></label>
+                <label className="block">Желаемая зарплата от, ₽<input className="mt-1 w-full rounded-lg border p-3" type="number" min={1} max={10000000} step={1} value={form.desiredSalary} onChange={e => change('desiredSalary', e.target.value)} /></label>
                 <label className="block">
                     <span className="mb-1 block">Резюме в PDF</span>
                     <input type="file" accept=".pdf,application/pdf" onChange={handleFileChange} className="block w-full text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-purple-100 file:px-4 file:py-2 file:text-purple-800 file:cursor-pointer" />
                 </label>
                 {resumeFile && <div className="space-y-2">
                     <p className="text-gray-600">Выбран файл: {resumeFile.name}</p>
-                    <button type="button" onClick={parseResume} className="rounded-lg bg-purple-100 px-4 py-2 text-purple-800">{busy === 'resume' ? 'Распознаём…' : 'Заполнить пустые поля из PDF'}</button>
+                    <button type="button" onClick={parseResume} className="rounded-lg bg-purple-100 px-4 py-2 text-purple-800">{busy === 'resume' ? 'Распознаём резюме…' : 'Заполнить пустые поля из PDF'}</button>
                 </div>}
                 <button type="submit" className="rounded-lg bg-purple-600 px-6 py-3 text-white hover:bg-purple-700 cursor-pointer disabled:opacity-50">{busy === 'save' ? 'Сохраняем…' : 'Сохранить профиль'}</button>
             </fieldset>
+            {busy === 'resume' && <p role="status">Распознаём резюме… Это может занять около 20 секунд.</p>}
             {fileError && <p role="alert" className="text-red-700">{fileError}</p>}
             {saveError && <p role="alert" className="text-red-700">{saveError}</p>}
             {message && <p role="status">{message}</p>}

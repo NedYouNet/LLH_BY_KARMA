@@ -47,7 +47,7 @@ export default function CandidateQuestionnaire() {
                 if (active) {
                     setLists(nextLists)
                     setProfileId(profile.id)
-                    setForm({ industry: profile.industry || '', specialization: profile.specialization || '', grade: profile.declared_grade || '' })
+                    setForm({ industry: profile.industry || '', specialization: profile.declared_specialization || profile.specialization || '', grade: profile.declared_grade || '' })
                     setCategory(status)
                 }
             } catch (failure) {
@@ -78,6 +78,8 @@ export default function CandidateQuestionnaire() {
                 industry: form.industry || null, specialization: form.specialization, declared_grade: form.grade,
                 experience_years: currentProfile.experience_years ?? 0,
                 skills: Array.isArray(currentProfile.skills) ? currentProfile.skills : [],
+                team_roles: currentProfile.team_roles || [],
+                work_format: currentProfile.work_format || null,
             })
             setSelection({ ...form, candidateId: profile.id })
         } catch (failure) { setError(errorMessage(failure)) }
