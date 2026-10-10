@@ -29,6 +29,7 @@ services:
   backend:
     build: ./backend
     environment:
+      GIGA_TOKEN: ${GIGA_TOKEN:-}
       ENVIRONMENT: dev
       DATABASE_URL: postgresql+psycopg://fsp:fsp@db:5432/fsp
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-for-production-0123456789}
