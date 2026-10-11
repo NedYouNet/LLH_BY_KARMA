@@ -354,8 +354,8 @@ export default function CandidateSettings() {
                                                 item.accessed_at ||
                                                 item.created_at
                                             )}
-                                            {item.reason &&
-                                                ` · ${item.reason}`}
+                                            {item.basis &&
+                                                ` · ${{ invitation_accepted: 'Принятое приглашение', application: 'Отклик на вакансию' }[String(item.basis).split(':')[0]] || item.basis}`}
                                         </li>
                                     ))}
                                 </ul>
