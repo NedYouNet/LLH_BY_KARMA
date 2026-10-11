@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     test_retry_cooldown_hours: int = 24  # пересдача на тот же грейд — не чаще раза в сутки
     test_pass_threshold: float = 70.0  # % для прохождения
     test_upgrade_hint_threshold: float = 90.0  # % при котором советуем попробовать грейд выше
-    test_duration_minutes: int = 30
+    test_duration_minutes: int = 240
     # Все направления: три задачи целевого грейда. Параметр оставлен для совместимости конфигурации.
     test_questions_count: int = 3
     code_exec_timeout_seconds: float = 3.0
