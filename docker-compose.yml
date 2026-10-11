@@ -1,0 +1,55 @@
+# Локальная демонстрационная сборка. Все команды запускаются из корня проекта.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fsp
+      POSTGRES_PASSWORD: fsp
+      POSTGRES_DB: fsp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fsp -d fsp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:8025:8025"
+  backend:
+    build: ./backend
+    environment:
+      ENVIRONMENT: dev
+      DATABASE_URL: postgresql+psycopg://fsp:fsp@db:5432/fsp
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-for-production-0123456789}
+      DATA_ENCRYPTION_KEYS: ${DATA_ENCRYPTION_KEYS:-}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      BACKEND_PUBLIC_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:5173
+      CORS_ORIGINS: http://localhost:5173
+      ML_SERVICE_URL: ""
+      GIGA_TOKEN: ${GIGA_TOKEN:-}
+      GIGA_MODEL: ${GIGA_MODEL:-GigaChat-Pro}
+      TEST_QUESTIONS_COUNT: "3"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
+      FSP_ID_MODE: ${FSP_ID_MODE:-mock}
+      FSP_ID_ISSUER: ${FSP_ID_ISSUER:-}
+      FSP_ID_CLIENT_ID: ${FSP_ID_CLIENT_ID:-fsp-talent}
+      FSP_ID_CLIENT_SECRET: ${FSP_ID_CLIENT_SECRET:-dev-fsp-id-client-secret-change-me}
+    volumes:
+      - ./backend/data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:5173:80"
+volumes:
+  pgdata:
