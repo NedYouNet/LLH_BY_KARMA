@@ -7,6 +7,8 @@ function extractToken(value) {
 }
 
 export default function EmailVerification({ email = '', devToken = '', initialToken = '', onVerified, onBack }) {
+    const localDemo = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+    const mailboxUrl = localDemo ? `http://${window.location.hostname}:8025/` : 'https://mail.lct.demo.bloomee.ru/'
     const [token, setToken] = useState(initialToken)
     const [address, setAddress] = useState(email)
     const [message, setMessage] = useState('')
@@ -38,7 +40,12 @@ export default function EmailVerification({ email = '', devToken = '', initialTo
     return <div className="mt-6 space-y-4">
         <h2 className="text-xl font-semibold">Подтверждение почты</h2>
         <p>Откройте письмо{email ? ` для ${email}` : ''} и вставьте сюда ссылку или токен подтверждения.</p>
-        {import.meta.env.DEV && <p className="text-sm">Локальные письма: <a href="http://localhost:8025" target="_blank" rel="noreferrer" className="text-purple-700 underline">открыть Mailpit</a>.</p>}
+        <section className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm space-y-2" aria-label="Демо-почта для жюри">
+            <p className="font-semibold">Демо-почта для жюри</p>
+            <p>В демонстрационной версии письма не приходят в личный почтовый ящик. Откройте Mailpit и найдите письмо для адреса, указанного при регистрации.</p>
+            <a href={mailboxUrl} target="_blank" rel="noreferrer" className="inline-block font-semibold text-purple-700 underline">Открыть письмо подтверждения в Mailpit</a>
+            <p>Скопируйте ссылку подтверждения из письма и вставьте её в поле ниже. Это общий тестовый ящик; не используйте реальные персональные данные.</p>
+        </section>
         <form onSubmit={e => { e.preventDefault(); verify(token) }} className="space-y-3">
             <label className="block">Ссылка или токен
                 <input required value={token} onChange={e => setToken(e.target.value)} disabled={busy} className="mt-1 w-full rounded-lg border p-3" />
