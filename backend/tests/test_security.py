@@ -139,7 +139,7 @@ def test_export_access_log_and_delete_account(client, db):
     assert export["account"]["email"] == "cand@test.ru" and len(export["invitations"]) == 1
 
     bad = client.request("DELETE", "/api/candidate/account", json={"password": "wrong"}, headers=hc)
-    assert bad.status_code == 401
+    assert bad.status_code == 400 and bad.json()["code"] == "INVALID_CREDENTIALS"  # не 401: сессия жива
     ok = client.request("DELETE", "/api/candidate/account", json={"password": "Secure2026x"}, headers=hc)
     assert ok.status_code == 204
     assert db.execute(text("SELECT count(*) FROM candidate_profiles")).scalar() == 0

@@ -8,7 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.database import utcnow
-from app.core.errors import Unauthorized
+from app.core.errors import BadRequest
 from app.core.security import verify_password
 from app.models import AuthEvent, CandidateProfile, ContactAccessLog, EmployerProfile, User
 from app.repositories.repos import CandidateRepository
@@ -45,7 +45,8 @@ class PrivacyService:
     def delete_account(self, user: User, password: str) -> None:
         """Полное удаление: профиль, попытки, приглашения, отклики удаляются каскадно (ON DELETE CASCADE)."""
         if not verify_password(password, user.password_hash):
-            raise Unauthorized("Неверный пароль", "INVALID_CREDENTIALS")
+            # 400, а не 401: пользователь вошёл, просто ошибся паролем. 401 клиент понимает как «сессия истекла».
+            raise BadRequest("Неверный пароль", "INVALID_CREDENTIALS")
         self.db.add(AuthEvent(user_id=None, event="account_deleted"))  # факт удаления без ПДн
         self.db.execute(delete(User).where(User.id == user.id))
         self.db.commit()
