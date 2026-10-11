@@ -60,7 +60,9 @@ def client_ip(request: Request) -> str:
     if settings.trust_proxy_headers:
         fwd = request.headers.get("x-forwarded-for")
         if fwd:
-            return fwd.split(",")[0].strip()
+            # nginx ($proxy_add_x_forwarded_for) дописывает настоящий адрес клиента В КОНЕЦ списка.
+            # Первые значения клиент может прислать сам, поэтому доверяем только последнему.
+            return fwd.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 

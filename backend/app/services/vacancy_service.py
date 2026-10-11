@@ -41,6 +41,15 @@ class VacancyService:
     def update(self, e: EmployerProfile, vacancy_id: int, data: VacancyUpdate) -> VacancyOut:
         v = self.owned(e, vacancy_id)
         changes = data.model_dump(exclude_unset=True)
+        # Поля, которые не могут быть пустыми: прислать null — ошибка, а не «стереть значение»
+        required = ("title", "description", "specialization", "grade", "salary_from", "salary_to",
+                    "salary_type", "work_format", "status")
+        empty = [k for k in required if k in changes and changes[k] is None]
+        if empty:
+            code = "SALARY_REQUIRED" if {"salary_from", "salary_to"} & set(empty) else "FIELD_REQUIRED"
+            msg = ("Зарплата в вакансии обязательна: укажите вилку «от» и «до»" if code == "SALARY_REQUIRED"
+                   else f"Поле не может быть пустым: {', '.join(empty)}")
+            raise BadRequest(msg, code, {"fields": empty})
         new_from = changes.get("salary_from", v.salary_from)
         new_to = changes.get("salary_to", v.salary_to)
         if new_to < new_from:

@@ -29,6 +29,9 @@ services:
       BACKEND_PUBLIC_URL: http://localhost:8000
       FRONTEND_URL: http://localhost:5173
       CORS_ORIGINS: http://localhost:5173
+      # Сайт ходит в API через nginx фронтенда: брать адрес клиента из X-Forwarded-For (последний, от nginx),
+      # иначе все пользователи выглядят одним адресом и делят лимиты входа/регистрации
+      TRUST_PROXY_HEADERS: "true"
       ML_SERVICE_URL: ""
       GIGA_TOKEN: ${GIGA_TOKEN:-}
       GIGA_MODEL: ${GIGA_MODEL:-GigaChat-Pro}

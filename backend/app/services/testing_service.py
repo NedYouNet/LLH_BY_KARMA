@@ -78,9 +78,18 @@ class TestingService:
     # ---------------------------------------------------------------- попытки
     def _expire_if_needed(self, a: TestAttempt) -> None:
         if a.status == "in_progress" and utcnow() > _aware(a.deadline_at) + GRACE:
+            c = self.db.get(CandidateProfile, a.candidate_id)
             a.status = "expired"
             a.finished_at = utcnow()
             a.passed = False
+            a.score = 0.0
+            # Грейд не меняется: просроченная попытка не понижает и не повышает
+            decision = GradeDecision(grade_before=c.grade if c else None, grade_after=c.grade if c else None,
+                                     changed=False, message="Время тестирования истекло — ответы не были отправлены. "
+                                                            "Текущий грейд не изменился.",
+                                     next_change_at=self.next_change_at(c) if c else None)
+            a.result = {"score": 0.0, "decision": decision.model_dump(mode="json"), "by_skill": {}, "by_level": {},
+                        "items": [], "expired": True}
             self.db.commit()
 
     def start(self, c: CandidateProfile, spec: str, target: str, vacancy_id: int | None) -> AttemptOut:
@@ -245,6 +254,9 @@ class TestingService:
             targets.append(GradeTarget(grade=g, allowed=ok, reason=msg))
         nca = self.next_change_at(c)
         active = self.attempts.active(c.id)
+        if active:
+            self._expire_if_needed(active)  # брошенный и просроченный тест не предлагаем «продолжить»
+            active = active if active.status == "in_progress" else None
         return CategoryStatus(
             specialization=c.specialization, grade=c.grade, category=category_label(c.specialization, c.grade),
             test_score=c.test_score, declared_grade=c.declared_grade, grade_assigned_at=c.grade_assigned_at,
