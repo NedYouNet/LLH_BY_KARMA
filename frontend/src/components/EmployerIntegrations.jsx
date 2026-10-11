@@ -25,13 +25,12 @@ export default function EmployerIntegrations() {
         event.preventDefault()
         let parsed
         try { parsed = new URL(url.trim()) } catch { setError('Введите полный HTTPS-адрес вебхука.'); return }
-        const localDev = import.meta.env.DEV &&
-            parsed.protocol === 'http:' &&
+        const localReceiver = parsed.protocol === 'http:' &&
             ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
 
-        if ((parsed.protocol !== 'https:' && !localDev) ||
+        if ((parsed.protocol !== 'https:' && !localReceiver) ||
             parsed.username || parsed.password) {
-            setError('Нужен HTTPS-адрес. При локальной разработке разрешён HTTP для localhost.')
+            setError('Нужен HTTPS-адрес. HTTP разрешён только для локального приёмника; доступность проверяет сервер.')
             return
         }
         action('save', () => employer.configureAts(url.trim()))
@@ -40,7 +39,7 @@ export default function EmployerIntegrations() {
         {secret && <div className="rounded border border-amber-300 bg-amber-50 p-4"><p>Сохраните секрет сейчас. После закрытия этого экрана он больше не будет показан.</p><code className="mt-2 block break-all select-all">{secret}</code><button type="button" className={`${secondaryClass} mt-3`} onClick={() => setSecret('')}>Секрет сохранён, скрыть</button></div>}
         {!resource.loading && !resource.error && resource.data && <>
             <p>{resource.data.enabled ? 'Включена' : 'Отключена'}</p>
-            <form onSubmit={save} className="space-y-3"><fieldset disabled={Boolean(busy)} className="space-y-3"><Field label="HTTPS-адрес вебхука" type="url" required maxLength={2000} value={url} onChange={setUrl} /><button className={buttonClass}>Сохранить интеграцию</button></fieldset></form>
+            <form onSubmit={save} className="space-y-3"><fieldset disabled={Boolean(busy)} className="space-y-3"><Field label="Адрес вебхука (HTTPS или локальный HTTP)" type="url" required maxLength={2000} value={url} onChange={setUrl} /><button className={buttonClass}>Сохранить интеграцию</button></fieldset></form>
             <div className="flex flex-wrap gap-2"><button type="button" className={secondaryClass} disabled={Boolean(busy) || !resource.data.enabled} onClick={() => action('test', employer.testAts)}>Отправить тестовый запрос</button><button type="button" className={secondaryClass} disabled={Boolean(busy) || !resource.data.enabled} onClick={() => { if (window.confirm('Сменить секрет? Затем обновите его в вашей ATS.')) action('rotate', () => employer.configureAts(resource.data.webhook_url, true)) }}>Сменить секрет</button><button type="button" className={secondaryClass} disabled={Boolean(busy) || !resource.data.enabled} onClick={() => { if (window.confirm('Отключить интеграцию с ATS?')) action('disable', employer.disableAts) }}>Отключить</button></div>
             <h3 className="font-semibold">Последние доставки</h3>{!resource.data.recent_deliveries?.length && <p>Доставок пока нет.</p>}
             <ul className="space-y-2">{(resource.data.recent_deliveries || []).map((item, index) => <li key={item.id || index} className="rounded border p-3">{date(item.created_at || item.delivered_at)} · {item.event || item.event_type || 'Событие'} · {item.status_code ?? item.status ?? (item.ok === true ? 'Успешно' : 'Результат не указан')}{item.error && ` · ${item.error}`}</li>)}</ul>

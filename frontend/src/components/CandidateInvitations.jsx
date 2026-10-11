@@ -107,7 +107,7 @@ export default function CandidateInvitations({ role = 'candidate' }) {
         {notice && <p role="status">{notice}</p>}
         {!resource.loading && !resource.error && !items.length && <p>Пока приглашений нет.</p>}
         {!resource.loading && !resource.error && items.map(item => {
-            const pending = invitationUiStatus(item.status) === 'pending'
+            const pending = ['pending', 'viewed'].includes(invitationUiStatus(item.status))
             return <article key={item.id} className="rounded-xl border border-gray-200 p-5">
                 <p className="text-sm text-gray-600">{role === 'candidate' ? item.company?.company_name : item.candidate?.display_name}</p>
                 <h3 className="mt-1 text-lg font-bold">{item.position_title}</h3>

@@ -269,13 +269,14 @@ export function roleToApi(uiRole) {
     return { Кандидат: 'candidate', Работодатель: 'employer' }[uiRole] || uiRole
 }
 
-/** Статус приглашения с сервера -> статус интерфейса (pending | accepted | rejected | withdrawn). */
+/** Статус приглашения с сервера -> статус интерфейса (pending | viewed | accepted | rejected | withdrawn). */
 export function invitationUiStatus(status) {
-    return { sent: 'pending', viewed: 'pending', accepted: 'accepted', declined: 'rejected', withdrawn: 'withdrawn' }[status] || status
+    return { sent: 'pending', viewed: 'viewed', accepted: 'accepted', declined: 'rejected', withdrawn: 'withdrawn' }[status] || status
 }
 
 export const INVITATION_STATUS_LABELS = {
-    pending: 'Ожидает ответа',
+    pending: 'Отправлено · ожидает ответа',
+    viewed: 'Просмотрено · ожидает ответа',
     accepted: 'Принято',
     rejected: 'Отклонено',
     withdrawn: 'Отозвано работодателем',
@@ -390,7 +391,7 @@ export const candidate = {
     exportData: () => request('GET', '/candidate/export'),
     deleteAccount: async (password) => {
         await request('DELETE', '/candidate/account', { body: { password } })
-        clearSession()
+        notifyLogout('account_deleted')
     },
     /** Скачать PDF-профиль: открывает диалог сохранения файла. */
     async downloadProfilePdf(filename = 'profile.pdf') {

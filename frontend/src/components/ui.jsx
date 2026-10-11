@@ -50,7 +50,10 @@ export function Reasons({ reasons = [], breakdown }) {
         {reasons.map((reason, index) => <p key={index} className={`rounded-lg p-2 text-sm ${reason.positive ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-900'}`}>{reason.label}{reason.missing?.length ? ` · Не хватает: ${reason.missing.join(', ')}` : ''}</p>)}
         {breakdown && <details><summary className="cursor-pointer text-sm text-purple-700">Вклад в оценку соответствия</summary>{Object.entries(breakdown).map(([key, raw]) => {
             const value = typeof raw === 'number' ? raw : raw?.contribution ?? raw?.score
-            return typeof value === 'number' ? <div key={key} className="mt-2 text-sm"><p>{labels[key] || key}: {value.toFixed(1)}</p><div className="h-2 rounded bg-gray-100"><div className="h-2 rounded bg-purple-500" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} /></div></div> : null
+            const percent = key === 'grade_multiplier' ? value * 100 : value
+            if (typeof value !== 'number') return null
+            const display = key === 'grade_multiplier' ? `×${value.toFixed(1)} (${percent.toFixed(0)}%)` : value.toFixed(1)
+            return <div key={key} className="mt-2 text-sm"><p>{labels[key] || key}: {display}</p><div className="h-2 rounded bg-gray-100"><div className="h-2 rounded bg-purple-500" style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} /></div></div>
         })}</details>}
     </div>
 }
