@@ -8,7 +8,7 @@ from app.schemas.common import ORMModel
 class EmployerProfileUpdate(BaseModel):
     company_name: str | None = Field(None, max_length=200)
     inn: str | None = Field(None, pattern=r"^\d{10}(\d{2})?$", description="ИНН: 10 или 12 цифр")
-    industry: str | None = None
+    industry: str | None = Field(None, max_length=50)
     description: str | None = Field(None, max_length=5000)
     website: str | None = Field(None, max_length=255)
     city: str | None = Field(None, max_length=100)

@@ -4,7 +4,7 @@ import { Field, buttonClass, ErrorNotice, ResourceState, useResource } from './u
 
 const fields = [
     ['company_name', 'Название компании', 200], ['description', 'Описание компании', 5000],
-    ['industry', 'Направление деятельности', 255], ['contact', 'Способ связи', 255],
+    ['industry', 'Направление деятельности (до 50 символов)', 50], ['contact', 'Способ связи', 255],
     ['inn', 'ИНН (необязательно)', 12], ['website', 'Сайт', 255], ['city', 'Город', 100],
     ['contact_name', 'Контактное лицо', 200], ['contact_email', 'Рабочая почта', 255],
     ['contact_phone', 'Рабочий телефон', 50], ['contact_telegram', 'Telegram', 100],
@@ -22,6 +22,7 @@ export default function EmployerProfile() {
         if (busy) return
         setError(''); setNotice('')
         if (!form.company_name.trim()) { setError('Введите название компании.'); return }
+        if (Array.from(form.industry).length > 50) { setError('Направление деятельности должно содержать не более 50 символов.'); return }
         if (form.inn && !/^\d{10}(\d{2})?$/.test(form.inn)) { setError('ИНН должен содержать 10 или 12 цифр.'); return }
         const patch = Object.fromEntries(fields.map(([key]) => [key, form[key].trim() || null]).filter(([key, value]) => value !== (resource.data[key] || null)))
         if (!Object.keys(patch).length) { setNotice('Изменений нет.'); return }

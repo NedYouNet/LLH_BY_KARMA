@@ -10,6 +10,18 @@ from tests.conftest import SURVEY, register
 from tests.test_vacancies_and_tasks import VACANCY
 
 
+def test_employer_industry_length_limit(client):
+    headers = register(client, "industry@test.ru", role="employer")
+    valid = "А" * 50
+    r = client.patch("/api/employer/profile", json={"industry": valid}, headers=headers)
+    assert r.status_code == 200, r.text
+    assert r.json()["industry"] == valid
+    r = client.patch("/api/employer/profile", json={"industry": "А" * 51}, headers=headers)
+    assert r.status_code == 422, r.text
+    assert client.get("/api/employer/profile", headers=headers).json()["industry"] == valid
+    assert client.patch("/api/employer/profile", json={"industry": None}, headers=headers).status_code == 200
+
+
 def test_vacancy_salary_cannot_be_erased(client):
     """Раньше PATCH с salary_from: null ронял сервер (500). Теперь — понятная ошибка 400."""
     he = register(client, "sal@test.ru", role="employer")
