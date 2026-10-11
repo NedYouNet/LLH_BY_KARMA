@@ -1,0 +1,36 @@
+.app-shell { min-height: 100dvh; }
+.app-panel { overflow-wrap: anywhere; }
+.app-panel :is(fieldset, form, section, article, label, .grid > *, .flex > *) { min-width: 0; }
+.app-panel fieldset { max-width: 100%; }
+.app-panel pre { min-width: 0; max-width: 100%; overflow-wrap: normal; }
+.app-panel :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { max-width: 100%; }
+.app-panel :is(input[type="checkbox"], input[type="radio"]) { flex-shrink: 0; }
+.mobile-code-editor {
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    padding: 12px;
+    border: 0;
+    border-radius: 0;
+    resize: vertical;
+    background: #1e1e1e;
+    color: #ededed;
+    font: 16px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+    tab-size: 4;
+    white-space: pre;
+    overflow: auto;
+    overflow-wrap: normal;
+}
+@media (max-width: 639px) {
+    .app-shell { padding: 8px; }
+    .app-panel { padding: 16px 12px; border-radius: 12px; }
+    .app-panel header { gap: 12px; }
+    .app-panel header h1 { font-size: 1.25rem; line-height: 1.35; }
+    .app-panel header img { max-width: 100%; height: 40px; }
+    .account-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .account-nav button { width: 100%; padding: 10px 8px; font-size: 14px; line-height: 1.4; }
+    .app-panel button { min-height: 44px; max-width: 100%; white-space: normal; }
+    .app-panel .flex:not(header):not(label):not(button) { flex-wrap: wrap; }
+    .app-panel :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 16px; }
+    .app-panel dialog { padding: 16px; max-height: 90dvh; }
+}

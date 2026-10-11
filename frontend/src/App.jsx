@@ -134,8 +134,8 @@ export default function App() {
         window.history.replaceState(null, '', url.pathname + url.search + url.hash)
     }
 
-    return <main className="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-center justify-center">
-        <section className="w-full max-w-5xl rounded-2xl bg-white p-4 sm:p-8 shadow-md">
+    return <main className="app-shell min-h-screen bg-gray-100 p-4 sm:p-8 flex items-start justify-center">
+        <section className="app-panel min-w-0 w-full max-w-5xl rounded-2xl bg-white p-4 sm:p-8 shadow-md">
             <header className="flex flex-wrap items-center gap-4 border-b border-gray-200 pb-5">
                 <img src="/fsp-logo.svg" alt="Федерация спортивного программирования" className="fsp-logo-light h-12 w-auto max-w-full object-contain sm:h-14" />
                 <img src="/fsp-logo-dark.svg" alt="Федерация спортивного программирования" className="fsp-logo-dark h-12 w-auto max-w-full object-contain sm:h-14" />
@@ -166,7 +166,7 @@ export default function App() {
                         <button disabled={leaving} className={buttonClass} onClick={handleLogout}>{leaving ? 'Выходим…' : 'Выйти'}</button>
                     </div>
                     {account.role === 'candidate' && <>
-                        <nav aria-label="Экраны кандидата" className="mt-6 flex flex-wrap gap-3">
+                        <nav aria-label="Экраны кандидата" className="account-nav mt-6 flex flex-wrap gap-3">
                             {Object.entries({ overview: 'Моя категория', profile: 'Профиль', survey: 'Анкета и тест', invitations: 'Приглашения', vacancies: 'Вакансии', applications: 'Отклики', tasks: 'Короткие задания', settings: 'Согласия и ФСП' }).map(([key, label]) => <button key={key} className={screen === key ? 'rounded-lg bg-purple-600 px-4 py-2 text-white' : buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
                         </nav>
                         {screen === 'overview' && <CandidateOverview onNavigate={setScreen} />}
@@ -179,7 +179,7 @@ export default function App() {
                         {screen === 'tasks' && <ShortTaskBoard role="candidate" />}
                     </>}
                     {account.role === 'employer' && <>
-                        <nav aria-label="Экраны работодателя" className="mt-6 flex flex-wrap gap-3">
+                        <nav aria-label="Экраны работодателя" className="account-nav mt-6 flex flex-wrap gap-3">
                             {Object.entries({ company: 'Компания', needs: 'Потребности', search: 'Поиск кандидатов', vacancies: 'Вакансии', applications: 'Отклики', tasks: 'Короткие задания', invitations: 'Приглашения', integrations: 'Интеграции' }).map(([key, label]) => <button key={key} className={screen === key ? 'rounded-lg bg-purple-600 px-4 py-2 text-white' : buttonClass} aria-pressed={screen === key} onClick={() => setScreen(key)}>{label}</button>)}
                         </nav>
                         {screen === 'company' && <EmployerProfile />}

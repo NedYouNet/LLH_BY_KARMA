@@ -39,7 +39,7 @@ export default function InvitationModal({ candidate, vacancy, onClose, onCreate 
         <form onSubmit={submit} className="mt-4 space-y-4"><fieldset disabled={busy || loading} className="space-y-4">
             <Field label="Должность" maxLength={200} value={form.position_title} onChange={value => change('position_title', value)} />
             <Field label="Описание предложения" multiline required minLength={3} maxLength={5000} value={form.message} onChange={value => change('message', value)} />
-            <div className="grid grid-cols-2 gap-3">{[['salary_from', 'Зарплата от, ₽'], ['salary_to', 'Зарплата до, ₽']].map(([name, label]) => <Field key={name} label={label} type="number" required min={1} max={10000000} step={1} value={form[name]} onChange={value => change(name, value)} />)}</div>
+            <div className="grid gap-3 sm:grid-cols-2">{[['salary_from', 'Зарплата от, ₽'], ['salary_to', 'Зарплата до, ₽']].map(([name, label]) => <Field key={name} label={label} type="number" required min={1} max={10000000} step={1} value={form[name]} onChange={value => change(name, value)} />)}</div>
             <label className="block">Сумма зарплаты<select value={form.salary_type} onChange={event => change('salary_type', event.target.value)} className="mt-1 w-full rounded-lg border p-3"><option value="gross">До вычета НДФЛ</option><option value="net">На руки</option></select></label>
             <Field label="Связь с работодателем" minLength={3} maxLength={255} required value={form.contact_method} onChange={value => change('contact_method', value)} />
             <button type="submit" className={buttonClass}>{busy ? 'Отправляем…' : 'Отправить приглашение'}</button>

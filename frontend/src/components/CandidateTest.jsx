@@ -215,7 +215,7 @@ export default function CandidateTest({ selection, onBack }) {
         {!loading && attempt && !result && <>
             <p className="sticky top-0 z-10 mt-4 rounded-lg bg-purple-50 p-3 text-purple-800">Осталось: {time}. Ответы сохраняются в этой вкладке. По окончании времени они отправятся автоматически.</p>
             <form onSubmit={event => { event.preventDefault(); submit() }} className="mt-4 space-y-4">
-                <fieldset disabled={locked} className="space-y-4">
+                <fieldset disabled={locked} className="min-w-0 space-y-4">
                     {attempt.items.map((item, index) => <div key={item.id} className="rounded-lg border border-gray-200 p-4">
                         <h3 className="font-bold">Задание {index + 1} · {item.difficulty ? ({ easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная' }[item.difficulty] || item.skill) : item.skill}{item.max_score != null && <span className="ml-2 text-sm font-medium text-purple-700">до {item.max_score} баллов</span>}</h3>
                         {item.base_weight != null && <p className="mt-1 text-sm text-gray-600">{item.base_weight} баллов пропорционально пройденным тестам + {item.bonus_weight} баллов, если пройдены все тесты.</p>}
@@ -236,7 +236,7 @@ export default function CandidateTest({ selection, onBack }) {
                             <p className="text-sm text-gray-600">Имя функции: <code>{item.code?.function_name || 'solve'}</code>. Параметры: <code>{argumentNames(item.code).join(', ') || 'нет'}</code>.</p>
                             {(item.code?.examples || []).map((example, exampleIndex) => <div key={exampleIndex} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                                 <p className="font-medium">{(item.code.examples.length > 1) ? `Пример ${exampleIndex + 1}` : 'Пример'}</p>
-                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
                                     <div><p className="text-sm text-gray-600">Аргументы</p>
                                         <pre className="mt-1 overflow-x-auto rounded-lg bg-white p-3"><code>{(example.args || []).map((value, position) => `${argumentNames(item.code)[position] || `arg${position + 1}`} = ${pythonLiteral(value)}`).join('\n')}</code></pre>
                                     </div>
@@ -246,7 +246,7 @@ export default function CandidateTest({ selection, onBack }) {
                                 </div>
                             </div>)}
                             <p className="text-sm text-gray-600">Ответ возвращается через return. input() и print() не нужны.</p>
-                            <div className="overflow-hidden rounded-lg border">
+                            <div className="min-w-0 w-full overflow-hidden rounded-lg border">
                                 <Suspense fallback={<p className="p-4">Загружаем редактор…</p>}><Editor height="300px" language="python" theme="vs-dark" value={answers[item.id] || ''} onChange={value => changeAnswer(item.id, value ?? '')} loading={<p className="p-4">Загружаем редактор…</p>} options={{ readOnly: locked || checking !== null, minimap: { enabled: false }, fontSize: 14, tabSize: 4, automaticLayout: true, ariaLabel: `Решение задания ${index + 1}` }} /></Suspense>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
